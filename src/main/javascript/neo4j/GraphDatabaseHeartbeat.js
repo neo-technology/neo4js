@@ -1,0 +1,336 @@
+/**
+ * Allows "taking the pulse" on a graph database, calling registered listeners
+ * at regular intervals with monitoring data.
+ */
+neo4j.GraphDatabaseHeartbeat = function(db) {
+
+    this.db = db;
+
+    /**
+     * Quick access to the databases monitor service.
+     */
+    this.monitor = db.manage.monitor;
+
+    this.listeners = {};
+    this.idCounter = 0;
+    this.listenerCounter = 0;
+
+    /**
+     * These correspond to the granularities available on the server side.
+     */
+    this.timespan = {
+        year : 1000 * 60 * 60 * 24 * 365,
+        month : 1000 * 60 * 60 * 24 * 31,
+        week : 1000 * 60 * 60 * 24 * 7,
+        day : 1000 * 60 * 60 * 24,
+        hours : 1000 * 60 * 60 * 6,
+        minutes : 1000 * 60 * 35
+    };
+
+    /**
+     * This is where the monitoring data begins.
+     */
+    this.startTimestamp = (new Date()).getTime() - this.timespan.year;
+
+    /**
+     * This is where the monitoring data ends.
+     */
+    this.endTimestamp = this.startTimestamp + 1;
+
+    /**
+     * List of timestamps, indexes correspond to indexes in data arrays. The is
+     * appended as more data is fetched.
+     */
+    this.timestamps = [];
+
+    /**
+     * Sets of data arrays fetched from the server. These are appended to as
+     * more data is fetched.
+     */
+    this.data = {};
+
+    /**
+     * Set to true while the server is being polled, used to make sure only one
+     * poll is triggered at any given moment.
+     */
+    this.isPolling = false;
+
+    // Bind these tightly to this object
+    this.processMonitorData = neo4j.proxy(this.processMonitorData, this);
+    this.beat = neo4j.proxy(this.beat, this);
+    this.waitForPulse = neo4j.proxy(this.waitForPulse, this);
+
+    // Start a pulse
+    setInterval(this.beat, 2000);
+};
+
+/**
+ * Register a method to be called at regular intervals with monitor data.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.addListener = function(listener) {
+
+    this.listenerCounter++;
+    this.listeners[this.idCounter++] = listener;
+
+    return this.idCounter;
+
+};
+
+/**
+ * Remove a listener.
+ * 
+ * @param listener
+ *            {Integer, Function} either the id returned by {@link #addListener}
+ *            or the listener method itself.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.removeListener = function(listener) {
+
+    var listenerWasRemoved = false;
+    if (typeof (listener) === "function")
+    {
+        for ( var key in this.listeners)
+        {
+            if (this.listeners[key] === listener)
+            {
+                delete this.listeners[key];
+                listenerWasRemoved;
+                break;
+            }
+        }
+    } else
+    {
+        if (this.listeners[listener])
+        {
+            delete this.listeners[listener];
+            listenerWasRemoved = true;
+        }
+    }
+
+    if (listenerWasRemoved)
+    {
+        this.listenerCounter--;
+    }
+
+};
+
+/**
+ * Get heartbeat saved data.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.getCachedData = function() {
+    return {
+        timestamps : this.timestamps,
+        data : this.data,
+        endTimestamp : this.endTimestamp,
+        startTimestamp : this.startTimestamp
+    };
+};
+
+/**
+ * Trigger a heart beat.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.beat = function() {
+    if (this.listenerCounter > 0 && !this.isPolling && this.monitor.available)
+    {
+        this.isPolling = true;
+        this.monitor.getDataFrom(this.endTimestamp, this.processMonitorData);
+    }
+};
+
+/**
+ * Process monitor data, send any new data out to listeners.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.processMonitorData = function(data) {
+    this.isPolling = false;
+
+    if (data && !data.error)
+    {
+
+        var boundaries = this.findDataBoundaries(data);
+
+        // If there is new data
+        if (boundaries.dataEnd >= 0)
+        {
+            this.endTimestamp = data.timestamps[boundaries.dataEnd];
+
+            // Append the new timestamps
+            var newTimestamps = data.timestamps.splice(boundaries.dataStart,
+                    boundaries.dataEnd - boundaries.dataStart);
+            this.timestamps = this.timestamps.concat(newTimestamps);
+
+            // Append the new data
+            var newData = {};
+            for ( var key in data.data)
+            {
+                newData[key] = data.data[key].splice(boundaries.dataStart,
+                        boundaries.dataEnd - boundaries.dataStart);
+
+                if (typeof (this.data[key]) === "undefined")
+                {
+                    this.data[key] = [];
+                }
+
+                this.data[key] = this.data[key].concat(newData[key]);
+            }
+
+            // Update listeners
+            var listenerData = {
+                server : this.server,
+                newData : {
+                    data : newData,
+                    timestamps : newTimestamps,
+                    end_time : this.endTimestamp,
+                    start_time : data.start_time
+                },
+                allData : this.getCachedData()
+            };
+
+            this.callListeners(listenerData);
+
+        } else
+        {
+            // No new data
+            this.adjustRequestedTimespan();
+        }
+    }
+};
+
+/**
+ * Used to wait for an offline server to come online.
+ * 
+ * @param callback
+ *            {function} Function that will be called when the server is online.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
+
+    var retryMethod = this.waitForPulse;
+    this.db.get("", function(data) {
+        if( data === null ) {
+            setTimeout(function(){
+                retryMethod(callback);
+            }, 500);
+        } else {
+            callback(true);
+        }
+    }, function(err) {
+        console.log(err);
+        setTimeout(retryMethod, 500);
+    })
+
+};
+
+/**
+ * This is used to offset a problem with monitor data granularity. This should
+ * be the servers concern, but that is not yet implemented.
+ * 
+ * The monitor data has a concept of granularity - if you ask for a wide enough
+ * timespan, you won't get any data back. This is because the data available is
+ * to "fine grained" to be visible in your wide time span (e.g. there is data
+ * for the last hour, but you asked for data from a full year).
+ * 
+ * This creates a problem since there might be data for a full year. So what we
+ * do is, we ask for a year. If we get an empty result, this method will make
+ * the timespan we ask for smaller and smaller, until we get start getting data
+ * back from the server.
+ * 
+ * @return {object} An object with a dataStart and a dataEnd key.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.adjustRequestedTimespan = function(data) {
+    var timespan = (new Date()).getTime() - this.endTimestamp;
+
+    if (timespan >= this.timespan.year)
+    {
+        this.endTimestamp = (new Date()).getTime() - this.timespan.month;
+        this.beat();
+    } else if (timespan >= this.timespan.month)
+    {
+        this.endTimestamp = (new Date()).getTime() - this.timespan.week;
+        this.beat();
+    } else if (timespan >= this.timespan.week)
+    {
+        this.endTimestamp = (new Date()).getTime() - this.timespan.day;
+        this.beat();
+    } else if (timespan >= this.timespan.day)
+    {
+        this.endTimestamp = (new Date()).getTime() - this.timespan.hours;
+        this.beat();
+    } else if (timespan >= this.timespan.day)
+    {
+        this.endTimestamp = (new Date()).getTime() - this.timespan.minutes;
+        this.beat();
+    }
+};
+
+/**
+ * Find the first and last index that contains a number in a given array. This
+ * is used because the monitor service returns "pads" its result with NaN data
+ * if it is asked for data it does not have.
+ * 
+ * @param data
+ *            {object} Should be the data object returned by the monitor
+ *            services methods.
+ * @return {object} An object with a dataStart and a dataEnd key.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.findDataBoundaries = function(data) {
+
+    var firstKey = this.getFirstKey(data);
+
+    var lastIndexWithData = -1, firstIndexWithData = -1;
+
+    if (firstKey)
+    {
+
+        // Find the last timestamp that has any data associated with it
+        for (lastIndexWithData = data.timestamps.length - 1; lastIndexWithData >= 0; lastIndexWithData--)
+        {
+            if (typeof (data.data[firstKey][lastIndexWithData]) === "number")
+            {
+                break;
+            }
+        }
+
+        // Find the first timestamp that has any data associated with it
+        for (firstIndexWithData = 0; firstIndexWithData <= lastIndexWithData; firstIndexWithData++)
+        {
+            if (typeof (data.data[firstKey][firstIndexWithData]) === "number")
+            {
+                break;
+            }
+        }
+    }
+
+    return {
+        dataStart : firstIndexWithData,
+        dataEnd : lastIndexWithData
+    };
+
+};
+
+/**
+ * Call all listeners with some data.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.callListeners = function(data) {
+    for ( var i in this.listeners)
+    {
+        setTimeout(function(listener) {
+            return function() {
+                listener(data);
+            }
+        }(this.listeners[i]), 0);
+    }
+};
+
+/**
+ * Return the first key encountered in some object, or null if none is
+ * available.
+ */
+neo4j.GraphDatabaseHeartbeat.prototype.getFirstKey = function(object) {
+    if (typeof (object) === "object")
+    {
+        for ( var key in object.data)
+        {
+            break;
+        }
+    }
+
+    return key ? key : null;
+};

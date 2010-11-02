@@ -1,0 +1,142 @@
+/**
+ * @class Interface to the backup functionality of the REST server.
+ * @extends neo4j.Service
+ * @param db
+ *            should be a neo4j.GraphDatabase object
+ */
+neo4j.services.BackupService = function(db) {
+
+    this.__init__(db);
+
+};
+
+neo4j.services.BackupService.prototype = new neo4j.Service();
+
+/**
+ * Trigger a manual backup to the manual backup path defined in the server
+ * settings.
+ * 
+ * @param callback
+ *            will be called when the backup is completed
+ * @function
+ */
+neo4j.services.BackupService.prototype.triggerManual = neo4j.Service
+        .resourceFactory({
+            'resource' : 'trigger_manual',
+            'method' : 'POST',
+            'errorHandler' : function(callback, error) {
+                if (error.exception == "NoBackupFoundationException")
+                {
+                    callback(false);
+                }
+            }
+        });
+
+/**
+ * Trigger backup foundation on the currently configured manual backup path.
+ * 
+ * @param callback
+ *            will be called when the foundation is done
+ * @function
+ */
+neo4j.services.BackupService.prototype.triggerManualFoundation = neo4j.Service
+        .resourceFactory({
+            'resource' : 'trigger_manual_foundation',
+            'method' : 'POST'
+        });
+
+/**
+ * Get a list of scheduled backup jobs and their latest logs.
+ * 
+ * @param callback
+ *            will be called with the list
+ * @function
+ */
+neo4j.services.BackupService.prototype.getJobs = neo4j.Service
+        .resourceFactory({
+            'resource' : 'jobs',
+            'method' : 'GET'
+        });
+
+/**
+ * Get a single job by id
+ * 
+ * @param id
+ *            is the id of the job
+ * @param callback
+ *            will be called with the job
+ * @function
+ */
+neo4j.services.BackupService.prototype.getJob = function(id, callback) {
+    this.getJobs(function(jobs) {
+        for ( var i in jobs.jobList)
+        {
+            if (jobs.jobList[i].id == id)
+            {
+                callback(jobs.jobList[i]);
+                return;
+            }
+        }
+
+        callback(null);
+    });
+};
+
+/**
+ * Delete a backup job
+ * 
+ * @param id
+ *            the id of the job
+ * @param callback
+ *            will be called when scheduled job is deleted
+ * @function
+ */
+neo4j.services.BackupService.prototype.deleteJob = neo4j.Service
+        .resourceFactory({
+            'resource' : 'job',
+            'method' : 'DELETE',
+            'urlArgs' : [ "id" ]
+        });
+
+/**
+ * Trigger foundation for a given scheduled job.
+ * 
+ * @param id
+ *            the id of the job
+ * @param callback
+ *            will be called when the foundation is done
+ * @function
+ */
+neo4j.services.BackupService.prototype.triggerJobFoundation = neo4j.Service
+        .resourceFactory({
+            'resource' : 'trigger_job_foundation',
+            'method' : 'POST',
+            'urlArgs' : [ "id" ]
+        });
+
+/**
+ * Create or edit a job schedule. If you supply an id in the job object, this
+ * will edit that job. If you omit the id, a new job is created.
+ * 
+ * @param job
+ *            A job JSON object. <br />
+ *            This should look like:
+ * 
+ * <pre>
+ * {
+ *     'id' : 12,
+ *     'name' : &quot;Daily backups&quot;,
+ *     'backupPath' : &quot;/var/backup&quot;,
+ *     'cronExpression' : &quot;0 0 12 * * ? *&quot;,
+ *     'autoFoundation' : true
+ * }
+ * </pre>
+ * 
+ * @param callback
+ *            will be called when the action is complete.
+ * @function
+ */
+neo4j.services.BackupService.prototype.setJob = neo4j.Service.resourceFactory({
+    'resource' : 'jobs',
+    'method' : 'PUT'
+});

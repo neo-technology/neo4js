@@ -1,0 +1,110 @@
+/**
+ * @class Interface to the config functionality of the REST server.
+ * @extends neo4j.Service
+ * @param db
+ *            should be a neo4j.GraphDatabase object
+ */
+neo4j.services.ConfigService = function(db) {
+
+    this.__init__(db);
+
+};
+
+neo4j.services.ConfigService.prototype = new neo4j.Service();
+
+/**
+ * Get a list of all available properties.
+ * 
+ * @param callback
+ *            will be called with the list of properties
+ * @function
+ */
+neo4j.services.ConfigService.prototype.getProperties = neo4j.Service
+        .resourceFactory({
+            'resource' : 'properties',
+            'method' : 'GET',
+            'wrap' : function(method, args) {
+                
+                var callback = args[0];
+                
+                method(function(data) {
+                    // Convert array of objects to map
+                    var props = {};
+                    for(var i in data) {
+                        props[data[i].key] = data[i];
+                    }
+                    
+                    callback(props);
+                });
+            }
+        });
+
+/**
+ * Fetch a specific property
+ * 
+ * @param key
+ *            is the property key
+ * @param callback
+ *            will be called with the property
+ */
+neo4j.services.ConfigService.prototype.getProperty = function(key, callback) {
+    this.getProperties(function(properties){
+       for(var propKey in properties) {
+           if(propKey === key ) {
+               callback(properties[propKey]);
+               return;
+           }
+       } 
+       
+       callback(null);
+    });
+};
+
+/**
+ * Set several settings at once. This will restart the server and/or the JVM as
+ * appropriate.
+ * 
+ * @param settings
+ *            should be a string map. Each key should map to a property key, and
+ *            the value should be the new value of that property.
+ * @param callback
+ *            will be called when the foundation is done
+ * @function
+ */
+neo4j.services.ConfigService.prototype.setProperties = neo4j.Service
+        .resourceFactory({
+            'resource' : 'properties',
+            'method' : 'POST',
+            'wrap' : function(method, args) {
+                
+                // Convert map to array of objects
+                var props = [];
+                var prop;
+                for ( var key in args[0])
+                {
+                    prop = {
+                        key : key,
+                        value : args[0][key]
+                    };
+                    props.push(prop);
+                    this.db.trigger("config.property.set", prop);
+                }
+
+                method(props, args[1]);
+            }
+        });
+
+/**
+ * Set a specific property
+ * 
+ * @param key
+ *            is the property key
+ * @param value is the value to set the property to
+ * @param callback
+ *            will be called with the property
+ */
+neo4j.services.ConfigService.prototype.setProperty = function(key, value, callback) {
+    var props = {};
+    props[key] = value;
+    this.setProperties(props, callback);
+};

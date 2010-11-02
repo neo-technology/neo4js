@@ -1,0 +1,175 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.neo4j.drivers</groupId>
+  <artifactId>neo4js</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <name>Neo4j - JavaScript REST Client</name>
+  <description>JavaScript API for the Neo4j REST data and management endpoints.</description>
+  <inceptionYear>2010</inceptionYear>
+  <parent>
+    <groupId>org.neo4j</groupId>
+    <artifactId>parent-pom</artifactId>
+    <version>10</version>
+  </parent>
+
+  <build>
+
+    <resources>
+      <resource>
+        <directory>${basedir}</directory>
+        <targetPath>META-INF</targetPath>
+        <includes>
+          <include>NOTICE*</include>
+          <include>LICENSE*</include>
+          <include>COPYRIGHT*</include>
+          <include>README*</include>
+          <include>CHANGES*</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/javascript</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <testResources>
+      <testResource>
+        <directory>${basedir}/src/test/javascript</directory>
+        <includes>
+          <include>**/*</include>
+        </includes>
+      </testResource>
+    </testResources>
+
+    <plugins>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>yuicompressor-maven-plugin</artifactId>
+        <version>1.1</version>
+
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>compress</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <sourceDirectory>src/main/javascript</sourceDirectory>
+          <excludes>
+            <exclude>**/*.md</exclude>
+            <exclude>**/*.txt</exclude>
+          </excludes>
+          <aggregations>
+            <aggregation>
+              <!-- remove files after aggregation (default: false) <removeIncluded>true</removeIncluded> -->
+              <!-- insert new line after each concatenation (default: false) -->
+              <insertNewLine>true</insertNewLine>
+
+              <output>${project.build.outputDirectory}/neo4js.js</output>
+
+              <inputDir>${project.build.outputDirectory}</inputDir>
+
+
+              <!-- files to include, path relative to output's directory or absolute path -->
+              <includes>
+                <include>neo4j/__init__-min.js</include>
+                <include>neo4j/services/__init__-min.js</include>
+
+                <include>neo4j/cachedFunction-min.js</include>
+                <include>neo4j/log-min.js</include>
+                <include>neo4j/proxy-min.js</include>
+                <include>neo4j/Events-min.js</include>
+                <include>neo4j/Web-min.js</include>
+                <include>neo4j/Service-min.js</include>
+
+                <include>neo4j/GraphDatabaseHeartbeat-min.js</include>
+
+                <include>neo4j/services/BackupService-min.js</include>
+                <include>neo4j/services/ConfigService-min.js</include>
+                <include>neo4j/services/ImportService-min.js</include>
+                <include>neo4j/services/ExportService-min.js</include>
+                <include>neo4j/services/ConsoleService-min.js</include>
+                <include>neo4j/services/JmxService-min.js</include>
+                <include>neo4j/services/LifecycleService-min.js</include>
+                <include>neo4j/services/MonitorService-min.js</include>
+
+                <include>neo4j/GraphDatabaseManager-min.js</include>
+                <include>neo4j/GraphDatabase-min.js</include>
+              </includes>
+            </aggregation>
+          </aggregations>
+
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-source</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+              <goal>test-jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+          <includes>
+            <include>neo4js.js</include>
+            <include>META-INF/*</include>
+          </includes>
+          <excludes>
+            <exclude>neo4j/**</exclude>
+            <exclude>**-min.*</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>nl.windgazer</groupId>
+        <artifactId>jsdoctk-plugin</artifactId>
+        <version>2.3.0-RC1</version>
+        <configuration>
+          <template>jsdoc</template> <!-- Alternatives are not pre-installed for version 2.x -->
+          <directory>${project.build.directory}/site/jsdoc</directory>
+          <recurse>10</recurse>
+          <ext>js</ext>
+          <allfunctions>true</allfunctions>
+          <Allfunctions>true</Allfunctions>
+          <privateOption>true</privateOption>
+          <srcDir>src/main/javascript</srcDir>
+          <private>true</private>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jsdoctk2</id>
+      <url>http://jsdoctk-plugin.googlecode.com/svn/repo</url>
+    </pluginRepository>
+  </pluginRepositories>
+  
+  <developers>
+  </developers>
+
+</project>
