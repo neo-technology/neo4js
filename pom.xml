@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.neo4j</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>10</version>
+    <version>11</version>
   </parent>
 
   <build>
@@ -125,7 +125,6 @@
 
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.1</version>
         <configuration>
           <classesDirectory>${project.build.outputDirectory}</classesDirectory>
           <includes>
