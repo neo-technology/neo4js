@@ -1,0 +1,22 @@
+Neo4j
+Copyright (c) 2002-2010 "Neo Technology," Network Engine for Objects in Lund AB
+   [http://neotechnology.com]
+
+This product includes software developed by "Neo Technology,"
+Network Engine for Objects in Lund AB (http://neotechnology.com).
+
+For licensing information, see COPYRIGHT.txt and LICENSE.txt.
+
+The bundled jQuery library is copyright 2010, John Resig
+and dual licensed under the MIT or GPL Version 2 licenses.
+http://jquery.org/license
+
+The bundled SIzzle.js library is copyright 2010,
+The Dojo Foundation and released under the MIT, BSD,
+and GPL Licenses.
+http://sizzlejs.com/
+
+The bundled QUnit library is copyright (c) 2009 John Resig,
+Jörn Zaefferer and dual licensed under the MIT and GPL licenses.
+http://docs.jquery.com/Qunit
+ 

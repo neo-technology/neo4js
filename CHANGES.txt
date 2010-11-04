@@ -1,0 +1,4 @@
+0.1 (2010-11-04)
+----------------
+
+o Initial release with only basic functionality.

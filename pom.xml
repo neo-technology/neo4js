@@ -5,12 +5,25 @@
   <version>0.1-SNAPSHOT</version>
   <name>Neo4j - JavaScript REST Client</name>
   <description>JavaScript API for the Neo4j REST data and management endpoints.</description>
+  <packaging>jar</packaging>
   <inceptionYear>2010</inceptionYear>
+  <url>http://components.neo4j.org/${project.artifactId}/</url>
+
   <parent>
     <groupId>org.neo4j</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>11</version>
+    <version>12</version>
   </parent>
+
+  <scm>
+    <connection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/trunk/</connection>
+    <developerConnection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/trunk/</developerConnection>
+    <url>https://trac.neo4j.org/browser/drivers/javascript/neo4js</url>
+  </scm>
+
+  <properties>
+    <short-name>neo4js</short-name>
+  </properties>
 
   <build>
 
@@ -124,6 +137,39 @@
       </plugin>
 
       <plugin>
+        <groupId>com.mycila.maven-license-plugin</groupId>
+        <artifactId>maven-license-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*.js</include>
+          </includes>
+          <excludes>
+            <exclude>src/test/javascript/vend/**</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>inject-license-in-generated-file</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <basedir>${project.build.outputDirectory}</basedir>
+              <includes>
+                <include>neo4js.js</include>
+              </includes>
+            </configuration>
+            <goals>
+              <goal>format</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <classesDirectory>${project.build.outputDirectory}</classesDirectory>
@@ -137,6 +183,15 @@
           </excludes>
         </configuration>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <tag>${releaseVersion}</tag>
+          <tagBase>https://svn.neo4j.org/drivers/javascript/${short-name}/tags</tagBase>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 
@@ -167,8 +222,17 @@
       <url>http://jsdoctk-plugin.googlecode.com/svn/repo</url>
     </pluginRepository>
   </pluginRepositories>
-  
+
   <developers>
+    <developer>
+      <id>jakewins</id>
+      <name>Jacob Hansson</name>
+      <email>jacob [at] voltvoodoo.com</email>
+      <timezone>+1</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
   </developers>
 
 </project>
