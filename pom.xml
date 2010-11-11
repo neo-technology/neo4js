@@ -182,6 +182,12 @@
             <exclude>**-min.*</exclude>
           </excludes>
         </configuration>
+        <executions>
+          <execution>
+            <id>attach-test-jar</id>
+            <phase>none</phase>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
