@@ -39,9 +39,14 @@ neo4j.Service = function() {
  * @param args.urlArgs
  *            (optional) is an array of named arguments that map to placeholders
  *            in the url
- * @param args.callbackWrap
+ * @param args.after
  *            (optional) will be called with the data from the server and the
  *            callback waiting to have it.
+ * @param args.before
+ *            (optional) will be called with a method to be called, and the 
+ *            data passed by the user. If you supply this, you have to do
+ *            something like "method.apply(this, args);" in the least, in
+ *            order to trigger the call to the server.
  * @param args.errorHandler
  *            (optional) handler for when something goes wrong. Gets an error
  *            object and the callback waiting for a response.
@@ -51,12 +56,12 @@ neo4j.Service.resourceFactory = function(args) {
     var urlArgs = args.urlArgs || [];
     var urlArgCount = urlArgs.length;
     
-    var callbackWrap = args.callbackWrap ? args.callbackWrap
+    var after = args.after ? args.after
             : function(data, callback) {
                 callback(data);
             };
 
-    var wrap = args.wrap ? args.wrap : function(method, args) {
+    var before = args.before ? args.before : function(method, args) {
         method.apply(this, args);
     };
     
@@ -70,7 +75,7 @@ neo4j.Service.resourceFactory = function(args) {
      */
     var resourceFunction = function() {
       
-        callbackWrap = neo4j.proxy(callbackWrap,this);
+        after = neo4j.proxy(after,this);
         errorHandler = neo4j.proxy(errorHandler,this);
         
         // Figure out what URL to call
@@ -111,14 +116,14 @@ neo4j.Service.resourceFactory = function(args) {
         if (data !== null)
         {
             neo4j.Web.ajax(args.method, url, data, function(data) {
-                callbackWrap(data, callback);
+                after(data, callback);
             }, function(error) {
                 errorHandler(callback, error);
             });
         } else
         {
             neo4j.Web.ajax(args.method, url, function(data) {
-                callbackWrap(data, callback);
+                after(data, callback);
             }, function(error) {
                 errorHandler(callback, error); 
             });
@@ -128,7 +133,7 @@ neo4j.Service.resourceFactory = function(args) {
 
     return function() {
         this.serviceMethodPreflight(function() {
-            wrap.call(this, neo4j.proxy(resourceFunction, this), arguments);
+            before.call(this, neo4j.proxy(resourceFunction, this), arguments);
         }, arguments); 
     };
 

@@ -102,6 +102,9 @@
                 <include>neo4j/Service-min.js</include>
 
                 <include>neo4j/GraphDatabaseHeartbeat-min.js</include>
+                
+                <include>neo4j/models/__init__-min.js</include>
+                <include>neo4j/models/JMXBean-min.js</include>
 
                 <include>neo4j/services/BackupService-min.js</include>
                 <include>neo4j/services/ConfigService-min.js</include>

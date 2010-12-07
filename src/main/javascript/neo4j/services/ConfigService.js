@@ -43,7 +43,7 @@ neo4j.services.ConfigService.prototype.getProperties = neo4j.Service
         .resourceFactory({
             'resource' : 'properties',
             'method' : 'GET',
-            'wrap' : function(method, args) {
+            'before' : function(method, args) {
                 
                 var callback = args[0];
                 
@@ -95,7 +95,7 @@ neo4j.services.ConfigService.prototype.setProperties = neo4j.Service
         .resourceFactory({
             'resource' : 'properties',
             'method' : 'POST',
-            'wrap' : function(method, args) {
+            'before' : function(method, args) {
                 
                 // Convert map to array of objects
                 var props = [];

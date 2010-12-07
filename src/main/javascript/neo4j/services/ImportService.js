@@ -60,7 +60,7 @@ neo4j.services.ImportService.prototype.fromUrl = neo4j.Service
     .resourceFactory({
         'resource' : 'import_from_url',
         'method' : 'POST',
-        'wrap': function(method, args) {
+        'before': function(method, args) {
             method({'url' : args[0]}, args[1]);
         }
     }

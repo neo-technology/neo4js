@@ -28,7 +28,7 @@ neo4j.services.JmxService = function(db) {
 
     this.__init__(db);
 
-    // Kernelinstance get called a lot, cache each result for two seconds
+    // Kernelinstance gets called a lot, cache each result for two seconds
     this.kernelInstance = neo4j.cachedFunction( this.kernelInstance, 0, 2000);
     
 };
@@ -60,7 +60,16 @@ neo4j.services.JmxService.prototype.getDomains = neo4j.Service
 neo4j.services.JmxService.prototype.getDomain = neo4j.Service.resourceFactory({
     'resource' : 'domain',
     'method' : 'GET',
-    'urlArgs' : [ 'domain' ]
+    'urlArgs' : [ 'domain' ],
+    'after' : function(data, callback) {
+    	var betterBeans = [];
+    	for (var i=0,l=data.beans; i<l; i++) {
+    		betterBeans.push( new neo4j.models.JMXBean(data.beans[i]) );
+    	}
+    	
+    	data.beans = betterBeans;
+    	callback(data);
+    }
 });
 
 /**
@@ -82,7 +91,7 @@ neo4j.services.JmxService.prototype.getBean = neo4j.Service.resourceFactory({
     'resource' : 'bean',
     'method' : 'GET',
     'urlArgs' : [ 'domain', 'objectName' ],
-    'wrap' : function(method, args) {
+    'before' : function(method, args) {
         if (args[0] === "neo4j")
         {
             var me = this;
@@ -97,7 +106,14 @@ neo4j.services.JmxService.prototype.getBean = neo4j.Service.resourceFactory({
             args[1] = escape(args[1]);
             method.apply(this, args);
         }
-    }
+    },
+	'after' : function(data, callback) {
+		if (data.length > 0) {
+			callback(new neo4j.models.JMXBean(data[0]));
+		} else {
+			callback(null);
+		}
+	}
 });
 
 /**
@@ -111,7 +127,14 @@ neo4j.services.JmxService.prototype.getBean = neo4j.Service.resourceFactory({
  */
 neo4j.services.JmxService.prototype.query = neo4j.Service.resourceFactory({
     'resource' : 'query',
-    'method' : 'POST'
+    'method' : 'POST',
+    'after' : function(data, callback) {
+    	var betterBeans = [];
+    	for (var i=0,l=data.length; i<l; i++) {
+    		betterBeans.push( new neo4j.models.JMXBean(data[i]) );
+    	}
+    	callback(betterBeans);
+    }
 });
 
 /**
