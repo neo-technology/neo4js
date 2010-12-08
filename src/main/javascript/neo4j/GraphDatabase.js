@@ -32,6 +32,8 @@
  * @class
  * @param url
  *            the url to the REST server
+ * @param manageUrl
+ * 	          the url to the Management endpoint
  * @returns a new GraphDatabase instance
  */
 neo4j.GraphDatabase = function(url, manageUrl) {
@@ -46,7 +48,6 @@ neo4j.GraphDatabase = function(url, manageUrl) {
      */
 	this.manageUrl = manageUrl || null;
     
-	
 	/**
      * Event handler, instance of {@link neo4j.Events}.
      */

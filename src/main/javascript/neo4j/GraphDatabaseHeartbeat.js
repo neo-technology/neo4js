@@ -232,7 +232,7 @@ neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
             callback(true);
         }
     }, function(err) {
-        console.log(err);
+        neo4j.log(err);
         setTimeout(retryMethod, 500);
     })
 
