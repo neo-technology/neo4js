@@ -37,6 +37,8 @@ neo4j.services.ConsoleService.prototype = new neo4j.Service();
  * 
  * @param cmd
  *            string command to execute.
+ * @param engine
+ *            engine to use to run script
  * @param callback
  *            will be called with the result
  * @function
@@ -46,7 +48,10 @@ neo4j.services.ConsoleService.prototype.exec = neo4j.Service
         'resource' : 'exec',
         'method' : 'POST',
         'before': function(method, args) {
-            method({'command' : args[0]}, args[1]);
+            method({
+            	'command' : args[0],
+            	'engine' : args[1]
+            	}, args[2]);
         }
     }
 );
