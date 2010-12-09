@@ -94,3 +94,19 @@ neo4j.models.JMXBean.prototype.parseName = function(name) {
 	return parsed;
 	
 };
+
+/**
+ * Get an attribute by name.
+ * 
+ * @return an attribute object, or null if none is found.
+ */
+neo4j.models.JMXBean.prototype.getAttribute = function(name) {
+	var search = name.toLowerCase();
+	for( var i=0,l=this.attributes.length; i<l; i++ ) {
+		if( this.attributes[i].name.toLowerCase() === search ) {
+			return this.attributes[i];
+		}
+	}
+	
+	return null;
+};
