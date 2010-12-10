@@ -227,14 +227,15 @@ neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
         if( data === null ) {
             setTimeout(function(){
                 retryMethod(callback);
-            }, 500);
+            }, 4000);
         } else {
             callback(true);
         }
     }, function(err) {
-        neo4j.log(err);
-        setTimeout(retryMethod, 500);
-    })
+    	setTimeout(function(){
+            retryMethod(callback);
+        }, 4000);
+    });
 
 };
 
