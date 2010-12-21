@@ -7,7 +7,7 @@
   <description>JavaScript API for the Neo4j REST data and management endpoints.</description>
   <packaging>jar</packaging>
   <inceptionYear>2010</inceptionYear>
-  <url>http://components.neo4j.org/${project.artifactId}/</url>
+  <url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
   <parent>
     <groupId>org.neo4j</groupId>
@@ -244,4 +244,12 @@
     </developer>
   </developers>
 
+  <distributionManagement>
+    <site>
+      <id>neo4j-site</id>
+      <url>scpexe://components.neo4j.org/home/neo/components/${project.artifactId}/${project.version}</url>
+    </site>
+  </distributionManagement>
+
 </project>
+
