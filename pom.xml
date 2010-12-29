@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.neo4j.drivers</groupId>
   <artifactId>neo4js</artifactId>
-  <version>0.2-1.2</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Neo4j - JavaScript REST Client</name>
   <description>JavaScript API for the Neo4j REST data and management endpoints.</description>
   <packaging>jar</packaging>
@@ -16,9 +16,9 @@
   </parent>
 
   <scm>
-    <connection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/tags/0.2-1.2</connection>
-    <developerConnection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/tags/0.2-1.2</developerConnection>
-    <url>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/tags/0.2-1.2</url>
+    <connection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/trunk/</connection>
+    <developerConnection>scm:svn:https://svn.neo4j.org/drivers/javascript/neo4js/trunk/</developerConnection>
+    <url>https://trac.neo4j.org/browser/drivers/javascript/neo4js</url>
   </scm>
 
   <properties>
