@@ -12,7 +12,7 @@
   <parent>
     <groupId>org.neo4j</groupId>
     <artifactId>parent-pom</artifactId>
-    <version>14</version>
+    <version>15</version>
   </parent>
 
   <scm>
@@ -143,19 +143,11 @@
         <groupId>com.mycila.maven-license-plugin</groupId>
         <artifactId>maven-license-plugin</artifactId>
         <configuration>
-          <includes>
-            <include>**/*.js</include>
-          </includes>
           <excludes>
             <exclude>src/test/javascript/vend/**</exclude>
           </excludes>
         </configuration>
         <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
           <execution>
             <id>inject-license-in-generated-file</id>
             <phase>prepare-package</phase>
@@ -252,4 +244,3 @@
   </distributionManagement>
 
 </project>
-
