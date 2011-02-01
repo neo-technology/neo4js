@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -18,15 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 /**
- * Wrapper around jQuerys proxy object, put in place to
- * allow disconnecting from jquery in the future.
- * 
  * This allows wrapping methods in closures, allowing them
  * to always be run in some pre-determined context.
  */
 neo4j.proxy = function(arg1, arg2) {
   
-    return jQuery.proxy(arg1, arg2);
+    return _.bind(arg1, arg2);
     
 };

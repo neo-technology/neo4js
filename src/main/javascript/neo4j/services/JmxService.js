@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * @class Interface to the jmx exposing functionality of the REST server.
  * @extends neo4j.Service
@@ -25,14 +26,14 @@
  */
 neo4j.services.JmxService = function(db) {
 
-    this.__init__(db);
+	neo4j.Service.call(this,db);
 
     // Kernelinstance gets called a lot, cache each result for two seconds
     this.kernelInstance = neo4j.cachedFunction( this.kernelInstance, 0, 2000);
     
 };
 
-neo4j.services.JmxService.prototype = new neo4j.Service();
+_.extend(neo4j.services.JmxService.prototype, neo4j.Service.prototype);
 
 /**
  * Get a list of all jmx domains available
@@ -152,9 +153,10 @@ neo4j.services.JmxService.prototype.query = neo4j.Service.resourceFactory({
  * @function
  */
 neo4j.services.JmxService.prototype.kernelInstance = function(callback) {
+    var web = this.db.web;
     this.serviceMethodPreflight(function(callback) {
         var url = this.resources['kernelquery'];
-        neo4j.Web.get(url, function(data) {
+        web.get(url, function(data) {
 
             // Data looks like : org.neo4j:instance=kernel#0,name=*
             // Split it to be: instance=kernel#0

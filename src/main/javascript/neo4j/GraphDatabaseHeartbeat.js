@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * Allows "taking the pulse" on a graph database, calling registered listeners
  * at regular intervals with monitoring data.
@@ -80,7 +81,7 @@ neo4j.GraphDatabaseHeartbeat = function(db) {
     this.waitForPulse = neo4j.proxy(this.waitForPulse, this);
 
     // Start a pulse
-    setInterval(this.beat, 2000);
+    neo4j.setInterval(this.beat, 2000);
 };
 
 /**

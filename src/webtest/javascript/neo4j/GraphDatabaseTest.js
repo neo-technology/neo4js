@@ -18,31 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @class Interface to the export functionality of the REST server.
- * @extends neo4j.Service
- * @param db
- *            should be a neo4j.GraphDatabase object
- */
-neo4j.services.ExportService = function(db) {
+module("neo4j.GraphDatabaseTest");
 
-	neo4j.Service.call(this,db);
-
-};
-
-_.extend(neo4j.services.ExportService.prototype, neo4j.Service.prototype);
-
-/**
- * Export all nodes, properties and relationships.
- * 
- * @param callback
- *            will be called with an object with a single property, "url", the
- *            value of which is a URL where you can download the export.
- * @function
- */
-neo4j.services.ExportService.prototype.all = neo4j.Service
-    .resourceFactory({
-        'resource' : 'export_all',
-        'method' : 'POST'
-    }
-);
+test("GraphDatabase has manager attached", function() {
+    
+    webmock("GET", DB_URL, { });
+    webmock("GET", MANAGEMENT_URL, { services:[] });
+    
+    var db = new neo4j.GraphDatabase(DB_URL, MANAGEMENT_URL, mockProvider);
+    equals( db.manage.url, MANAGEMENT_URL, "Creates manager instance with correct url" );
+});

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * Web provider using jQuery.
  * 
@@ -27,16 +28,14 @@ neo4j.jqueryWebProvider = {
     /**
 	 * Ajax call implementation.
 	 */
-    ajax : function(method, url, data, success, failure, timeout) {
-
-        if (typeof (data) === "function")
-        {
-            failure = success;
-            success = data;
-            data = null;
-        }
+    ajax : function(args) {
         
-        var timeout = timeout || 5000,
+        var timeout = args.timeout || 5000,
+            method = args.method,
+            url = args.url,
+            data = args.data,
+            success = args.success,
+            failure = args.failure,
             error = function(req) {
             try {
                 if (req.status === 200)
@@ -51,29 +50,22 @@ neo4j.jqueryWebProvider = {
                 // We end up here if there
                 // is no status to read
             }
-            
-            if (typeof (failure) === "function")
+            try
             {
-            	
-                try
-                {
-                	if( req.status === 0 ) {
-                		failure( {'connectionLost':true}, req );
-                	} else {
-	                    var error = JSON
-	                            .parse(req.responseText);
-	                    failure(error, req);
-                	}
-                } catch (e)
-                {
-                    failure({}, req);
-                }
-            } else
+            	if( req.status === 0 ) {
+            	    failure( new neo4j.exceptions.ConnectionLostException() );
+            	} else {
+                    var error = JSON
+                            .parse(req.responseText);
+                    failure(new neo4j.exceptions.HttpException(req.status, error, req));
+            	}
+            } catch (e)
             {
-                neo4j.log(req);
+                failure(new neo4j.exceptions.HttpException(-1, {}, req));
             }
 	    };
 
+	    var isCrossDomain = this.isCrossDomain;
         setTimeout(
                 (function(method, url, data, success, failure) {
 
@@ -86,14 +78,14 @@ neo4j.jqueryWebProvider = {
                     }
 
                     return function() {
-                        if (neo4j.Web.isCrossDomain(url)
+                        if (isCrossDomain(url)
                                 && window.XDomainRequest)
                         {
                             // IE8 Cross domain
                             // TODO
                             if (typeof (failure) === "function")
                             {
-                                failure("Cross-domain requests are available in IE, but are not yet implemented in neo4js.");
+                                failure(new neo4j.exceptions.HttpException(-1, null, null, "Cross-domain requests are available in IE, but are not yet implemented in neo4js."));
                             }
                         } else
                         {
@@ -120,6 +112,26 @@ neo4j.jqueryWebProvider = {
                         }
                     };
                 })(method, url, data, success, failure), 0); // End timeout
+    },
+
+    /**
+	 * Check if a url is cross-domain from the current window.location url.
+	 */
+    isCrossDomain : function(url) {
+        if (url)
+        {
+            var httpIndex = url.indexOf("://");
+            if (httpIndex === -1 || httpIndex > 7)
+            {
+                return false;
+            } else
+            {
+                return url.substring(httpIndex + 3).split("/", 1)[0] !== window.location.host;
+            }
+        } else
+        {
+            return false;
+        }
     }
 };
 
@@ -127,175 +139,203 @@ neo4j.jqueryWebProvider = {
  * Interface to jQuery AJAX library. This is here to enable a fairly simple
  * expansion to make other AJAX libraries available as underlying
  * implementation, thus dropping dependency on jQuery.
- * 
- * @namespace
  */
-neo4j.Web = function() {
+neo4j.Web = function(webProvider) {
 
-    var webProvider = neo4j.jqueryWebProvider;
+    this.webProvider = webProvider || neo4j.jqueryWebProvider;
 
-    /** @scope neo4j.Web */
-    return {
+};
 
-        /**
-		 * Perform a GET http request to the given url.
-		 * 
-		 * @param url
-		 *            is the url to send the request to
-		 * @param data
-		 *            (optional) javascript object to send as payload. This will
-		 *            be converted to JSON.
-		 * @param success
-		 *            (optional) callback called with de-serialized JSON
-		 *            response data as argument
-		 * @param failure
-		 *            (optional) callback called with failed request object
-		 */
-        get : function(url, data, success, failure) {
-            return neo4j.Web.ajax("GET", url, data, success, failure);
-        },
+_.extend(neo4j.Web.prototype, {
 
-        /**
-		 * Perform a POST http request to the given url.
-		 * 
-		 * @param url
-		 *            is the url to send the request to
-		 * @param data
-		 *            (optional) javascript object to send as payload. This will
-		 *            be converted to JSON.
-		 * @param success
-		 *            (optional) callback called with de-serialized JSON
-		 *            response data as argument
-		 * @param failure
-		 *            (optional) callback called with failed request object
-		 */
-        post : function(url, data, success, failure) {
-            return neo4j.Web.ajax("POST", url, data, success, failure);
-        },
+    /**
+	 * Perform a GET http request to the given url.
+	 * 
+	 * @param url
+	 *            is the url to send the request to
+	 * @param data
+	 *            (optional) javascript object to send as payload. This will
+	 *            be converted to JSON.
+	 * @param success
+	 *            (optional) callback called with de-serialized JSON
+	 *            response data as argument
+	 * @param failure
+	 *            (optional) callback called with failed request object
+	 */
+    get : function(url, data, success, failure) {
+        return this.ajax("GET", url, data, success, failure);
+    },
 
-        /**
-		 * Perform a PUT http request to the given url.
-		 * 
-		 * @param url
-		 *            is the url to send the request to
-		 * @param data
-		 *            (optional) javascript object to send as payload. This will
-		 *            be converted to JSON.
-		 * @param success
-		 *            (optional) callback called with de-serialized JSON
-		 *            response data as argument
-		 * @param failure
-		 *            (optional) callback called with failed request object
-		 */
-        put : function(url, data, success, failure) {
-            return neo4j.Web.ajax("PUT", url, data, success, failure);
-        },
+    /**
+	 * Perform a POST http request to the given url.
+	 * 
+	 * @param url
+	 *            is the url to send the request to
+	 * @param data
+	 *            (optional) javascript object to send as payload. This will
+	 *            be converted to JSON.
+	 * @param success
+	 *            (optional) callback called with de-serialized JSON
+	 *            response data as argument
+	 * @param failure
+	 *            (optional) callback called with failed request object
+	 */
+    post : function(url, data, success, failure) {
+        return this.ajax("POST", url, data, success, failure);
+    },
 
-        /**
-		 * Perform a DELETE http request to the given url.
-		 * 
-		 * @param url
-		 *            is the url to send the request to
-		 * @param data
-		 *            (optional) javascript object to send as payload. This will
-		 *            be converted to JSON.
-		 * @param success
-		 *            (optional) callback called with de-serialized JSON
-		 *            response data as argument
-		 * @param failure
-		 *            (optional) callback called with failed request object
-		 */
-        del : function(url, data, success, failure) {
-            return neo4j.Web.ajax("DELETE", url, data, success, failure);
-        },
+    /**
+	 * Perform a PUT http request to the given url.
+	 * 
+	 * @param url
+	 *            is the url to send the request to
+	 * @param data
+	 *            (optional) javascript object to send as payload. This will
+	 *            be converted to JSON.
+	 * @param success
+	 *            (optional) callback called with de-serialized JSON
+	 *            response data as argument
+	 * @param failure
+	 *            (optional) callback called with failed request object
+	 */
+    put : function(url, data, success, failure) {
+        return this.ajax("PUT", url, data, success, failure);
+    },
 
-        /**
-		 * Perform a http request to the given url.
-		 * 
-		 * @param method
-		 *            is the HTTP method to use (e.g. PUT, POST, GET, DELETE)
-		 * @param url
-		 *            is the url to send the request to
-		 * @param data
-		 *            (optional) javascript object to send as payload. This will
-		 *            be converted to JSON.
-		 * @param success
-		 *            (optional) callback called with de-serialized JSON
-		 *            response data as argument
-		 * @param failure
-		 *            (optional) callback called with failed request object
-		 */
-        ajax : function(method, url, data, success, failure) {
+    /**
+	 * Perform a DELETE http request to the given url.
+	 * 
+	 * @param url
+	 *            is the url to send the request to
+	 * @param data
+	 *            (optional) javascript object to send as payload. This will
+	 *            be converted to JSON.
+	 * @param success
+	 *            (optional) callback called with de-serialized JSON
+	 *            response data as argument
+	 * @param failure
+	 *            (optional) callback called with failed request object
+	 */
+    del : function(url, data, success, failure) {
+        return this.ajax("DELETE", url, data, success, failure);
+    },
 
-        	if(typeof(data) === "function" && success) {
-        		// No data, data param is success callback, success callback is failure callback.
-        		success = neo4j.Web.wrapFailureCallback(success);
-        	} else if (typeof(failure) === "function" ) {
-        		failure = neo4j.Web.wrapFailureCallback(failure);
-        	}
-        	
-            return webProvider.ajax(method, url, data, success, failure);
-
-        },
-
-        /**
-		 * Check if a url is cross-domain from the current window.location url.
-		 */
-        isCrossDomain : function(url) {
-            if (url)
-            {
-                var httpIndex = url.indexOf("://");
-                if (httpIndex === -1 || httpIndex > 7)
-                {
-                    return false;
-                } else
-                {
-                    return url.substring(httpIndex + 3).split("/", 1)[0] !== window.location.host;
-                }
-            } else
-            {
-                return false;
-            }
-        },
-
-        /**
-		 * Set the provider that should be used to do ajax requests.
-		 * 
-		 * @see {@link neo4j.Web.ajax} for how the provider is used
-		 */
-        setWebProvider : function(provider) {
-            webProvider = provider;
-        },
-
-        /**
-		 * Take a url with {placeholders} and replace them using a map of
-		 * placeholder->string.
-		 */
-        replace : function(url, replace) {
-            for ( var placeholder in replace)
-            {
-                url = url
-                        .replace("{" + placeholder + "}", replace[placeholder]);
-            }
-
-            return url;
-        },
+    /**
+	 * Perform a http request to the given url.
+	 * 
+	 * TODO: Refactor to sort out which arg is which at a single point.
+	 * 
+	 * @param method
+	 *            is the HTTP method to use (e.g. PUT, POST, GET, DELETE)
+	 * @param url
+	 *            is the url to send the request to
+	 * @param data
+	 *            (optional) javascript object to send as payload. This will
+	 *            be converted to JSON.
+	 * @param success
+	 *            (optional) Callback called with de-serialized JSON
+	 *            response data as argument. You can also use the promise
+	 *            returned to hook into this callback.
+	 * @param failure
+	 *            (optional) Callback called with failed request object.
+	 *            You can also use the promise returned to hook into this 
+	 *            callback.
+	 * @return A promise for a http response.
+	 */
+    ajax : function() {
         
-        /**
-         * Wraps a failure callback for web requests. This handles web errors like
-         * connection failures, and triggers events accordingly.
-         */
-        wrapFailureCallback : function(cb) {
-        	return function(error, xhr) {
-        		if( error && error.connectionLost ) {
-        			neo4j.events.trigger("web.connection.failed", [xhr]);
-        			cb.apply(this, arguments);
-        		} else if(typeof(cb) === "function") {
-        			cb.apply(this, arguments);
-        		}
-        	};
+        var args = this._processAjaxArguments(arguments),
+            web = this;
+        
+        args.userFail = this.wrapFailureCallback(args.failure);
+        args.userSuccess = args.success;
+        
+	    return new neo4j.Promise(function(fulfill, fail) {
+	        args.failure = function() {
+	            fail.apply(this, arguments);
+	            args.userFail.apply(this, arguments);
+	        }
+	        args.success = function() {
+                fulfill.apply(this, arguments);
+                args.userSuccess.apply(this, arguments);
+            }
+	        
+	        try {
+	            web.webProvider.ajax(args);
+	        } catch (e) {
+	            args.failure(e);
+	        }
+	    });
+
+    },
+    
+    /**
+     * Check if a given string seems to be a URL.
+     */
+    looksLikeUrl : function(theUnknownString) {
+    	var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+		return regexp.test(theUnknownString);
+    },
+
+    /**
+	 * Set the provider that should be used to do ajax requests.
+	 * 
+	 * @see {@link neo4j.Web#ajax} for how the provider is used
+	 */
+    setWebProvider : function(provider) {
+        this.webProvider = provider;
+    },
+
+    /**
+	 * Take a url with {placeholders} and replace them using a map of
+	 * placeholder->string.
+	 */
+    replace : function(url, replaceMap) {
+        var out = {url:url};
+        _.each(_.keys(replaceMap), function(key) {
+            out.url = out.url.replace("{" + key + "}", replaceMap[key]);
+        });
+        return out.url;
+    },
+    
+    /**
+     * Wraps a failure callback for web requests. This handles web errors like
+     * connection failures, and triggers events accordingly.
+     */
+    wrapFailureCallback : function(cb) {
+    	return function(ex) {
+    		if( ex instanceof neo4j.exceptions.ConnectionLostException ) {
+    			neo4j.events.trigger("web.connection.failed", [xhr]);
+    		}
+
+            cb.apply(this, arguments);
+    	};
+    },
+    
+    /**
+     * Go through the arguments array that the ajax method recieves,
+     * and return a map containing appropriate handlers, request method,
+     * data and url.
+     */
+    _processAjaxArguments : function(args) {
+        var method, url, data, success, failure,
+            args = _.toArray(args);
+        
+        method = args.shift();
+        url = args.shift();
+        
+        data = args.length > 0 && !_.isFunction(args[0]) ? args.shift() : null;       
+        
+        success = args.length > 0 ? args.shift() : function() {};
+        failure = args.length > 0 ? args.shift() : function() {};
+        
+        return {
+            method : method, 
+            url : url,
+            data : data,
+            success : success,
+            failure : failure
         }
+    }
 
-    };
-
-}();
+});

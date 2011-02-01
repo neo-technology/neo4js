@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * @class Interface to the config functionality of the REST server.
  * @extends neo4j.Service
@@ -25,11 +26,11 @@
  */
 neo4j.services.ConfigService = function(db) {
 
-    this.__init__(db);
+	neo4j.Service.call(this,db);
 
 };
 
-neo4j.services.ConfigService.prototype = new neo4j.Service();
+_.extend(neo4j.services.ConfigService.prototype, neo4j.Service.prototype);
 
 /**
  * Get a list of all available properties.

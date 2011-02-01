@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,12 +17,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * Thin wrapper around console.log, making sure it exists.
  * @param anything, all will be passed to console.log
  */
 neo4j.log = function() {
-    if(window.console && typeof(window.console.log) === "function") {
-        console.log.apply(this, arguments);
+    if( typeof(console) != "undefined" && typeof(console.log) === "function") {
+    	console.log.apply(this, arguments);
     }
 };

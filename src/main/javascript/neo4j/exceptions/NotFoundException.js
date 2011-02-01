@@ -19,30 +19,12 @@
  */
 
 /**
- * @class Interface to the export functionality of the REST server.
- * @extends neo4j.Service
- * @param db
- *            should be a neo4j.GraphDatabase object
+ * Triggered when a node or relationship cannot be found.
  */
-neo4j.services.ExportService = function(db) {
-
-	neo4j.Service.call(this,db);
-
+neo4j.exceptions.NotFoundException = function(url) {
+    Error.call(this, "The object at url " + url + " does not exist.");
+    this.url = url;
 };
 
-_.extend(neo4j.services.ExportService.prototype, neo4j.Service.prototype);
+neo4j.exceptions.NotFoundException.prototype = new Error();
 
-/**
- * Export all nodes, properties and relationships.
- * 
- * @param callback
- *            will be called with an object with a single property, "url", the
- *            value of which is a URL where you can download the export.
- * @function
- */
-neo4j.services.ExportService.prototype.all = neo4j.Service
-    .resourceFactory({
-        'resource' : 'export_all',
-        'method' : 'POST'
-    }
-);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
  * Used to wrap a tiny cache around a single function. Currently only works for
  * functions that return their result via callbacks.
@@ -28,21 +29,18 @@
  * @param func
  *            is the function to wrap
  * @param callbackArg
- *            is the position of the callback argument to the wrapped function
+ *            is the position of the callback argument to the wrapped function.
  * @param timeout
  *            (optional) is the time in milliseconds before the cache becomes
  *            invalid, default is infinity (-1).
  */
 neo4j.cachedFunction = function(func, callbackArg, timeout) {
 
-    var cachedResult = null;
-    var cachedResultContext = null;
-
-    var cacheTimeout = timeout || false;
-
-    var isCached = false;
-
-    var waitingList = [];
+    var cachedResult = null,
+        cachedResultContext = null,
+        isCached = false,
+        timeout = timeout || false,
+        waitingList = [];
 
     return function wrap() {
         var callback = arguments[callbackArg];
@@ -52,7 +50,10 @@ neo4j.cachedFunction = function(func, callbackArg, timeout) {
             callback.apply(cachedResultContext, cachedResult);
         } else
         {
-            if (waitingList.length == 0)
+
+            waitingList.push(callback);
+        	
+            if (waitingList.length === 1)
             {
 
                 arguments[callbackArg] = function() {
@@ -62,25 +63,22 @@ neo4j.cachedFunction = function(func, callbackArg, timeout) {
 
                     for ( var i in waitingList)
                     {
-
                         waitingList[i].apply(cachedResultContext, cachedResult);
                     }
 
                     waitingList = [];
 
-                    if (cacheTimeout)
+                    if (timeout)
                     {
                         setTimeout(function() {
                             isCached = false;
-                        }, cacheTimeout);
+                        }, timeout);
                     }
                 };
 
                 func.apply(this, arguments);
 
             }
-
-            waitingList.push(callback);
 
         }
     };

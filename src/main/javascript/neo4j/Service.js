@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2011 "Neo Technology,"
+ * Copyright (c) 2002-2010 "Neo Technology,"
  * Network Engine for Objects in Lund AB [http://neotechnology.com]
  *
  * This file is part of Neo4j.
@@ -17,12 +17,55 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+
 /**
+ * Creates event handling system for this service, as well as initializing
+ * various properties.
+ * 
+ * Sets the this.db attribute. Also hooks an event listener that waits for the
+ * services.loaded event. If services.loaded is triggered, and this service is
+ * not initialized, it is assumed that this service is not available.
+ * 
  * @class parent class that provides common items for services, such as a http
  *        interface
  */
-neo4j.Service = function() {
+neo4j.Service = function(db) {
+	
+    /**
+     * List of commands waiting to be run as soon as the service is initialized.
+     */
+    this.callsWaiting = [];
 
+    this.loadServiceDefinition = neo4j.cachedFunction(this.loadServiceDefinition,0);
+    
+    /**
+     * Event handler. This is unique for each service.
+     * 
+     * @see {@link neo4j.Events}
+     */
+    this.events = new neo4j.Events();
+
+    /**
+     * Convinience access to event bind method.
+     */
+    this.bind = neo4j.proxy(this.events.bind, this.events);
+
+    /**
+     * Convinience access to event trigger method.
+     */
+    this.trigger = neo4j.proxy(this.events.trigger, this.events);
+
+    /**
+     * A reference to the GraphDatabase instance.
+     */
+    this.db = db;
+    
+    this.db.bind("services.loaded", neo4j.proxy(function() {
+        if (!this.initialized)
+        {
+            this.setNotAvailable();
+        }
+    }, this));
 };
 
 /**
@@ -86,7 +129,7 @@ neo4j.Service.resourceFactory = function(args) {
                 replace[urlArgs[i]] = arguments[i];
             }
 
-            var url = neo4j.Web.replace(this.resources[args.resource], replace);
+            var url = this.db.web.replace(this.resources[args.resource], replace);
 
         } else
         {
@@ -114,14 +157,14 @@ neo4j.Service.resourceFactory = function(args) {
         
         if (data !== null)
         {
-            neo4j.Web.ajax(args.method, url, data, function(data) {
+        	this.db.web.ajax(args.method, url, data, function(data) {
                 after(data, callback);
             }, function(error) {
                 errorHandler(callback, error);
             });
         } else
         {
-            neo4j.Web.ajax(args.method, url, function(data) {
+        	this.db.web.ajax(args.method, url, function(data) {
                 after(data, callback);
             }, function(error) {
                 errorHandler(callback, error); 
@@ -138,239 +181,189 @@ neo4j.Service.resourceFactory = function(args) {
 
 };
 
-/**
- * Keeps track of if the init method has been called.
- */
-neo4j.Service.prototype.initialized = false;
+_.extend(neo4j.Service.prototype, {
 
-/**
- * Set to true if the service is available, false if not and null if we are
- * still waiting for the server to tell us.
- */
-neo4j.Service.prototype.available = null;
+	/**
+	 * Keeps track of if the init method has been called.
+	 */
+	initialized : false,
+	
+	/**
+	 * Set to true if the service is available, false if not and null if we are
+	 * still waiting for the server to tell us.
+	 */
+	available : null,
+	
+	/**
+	 * Contains URLs to the resources the service provides. This is lazily loaded
+	 * when any of the service methods are called.
+	 */
+	resources : null,
+	
+	/**
+	 * Go through the list of method calls that are waiting for this service to
+	 * initialize, and run all of them.
+	 */
+	handleWaitingCalls : function() {
+	
+	    for ( var i = 0, l = this.callsWaiting.length; i < l; i++)
+	    {
+	        try
+	        {
+	            this.serviceMethodPreflight(this.callsWaiting[i].method,
+	                    this.callsWaiting[i].args);
+	        } catch (e)
+	        {
+	            neo4j.log(e);
+	        }
+	    }
+	
+	},
+	
+	/**
+	 * Do a GET-request to the root URL for this service, store the result in
+	 * this.serviceDefinition.
+	 * 
+	 * Trigger service.definition.loaded-event on the service-local event handler.
+	 */
+	loadServiceDefinition : function(callback) {
+	    this.get("/", neo4j.proxy(function(data) {
+	        this.resources = data.resources;
+	        this.trigger("service.definition.loaded", data);
+	        callback(data);
+	    }, this));
+	},
+	
+	/**
+	 * Initialize the service, set the base URL for api calls. <br />
+	 * Example: <br />
+	 * 
+	 * <pre>
+	 * var service = new neo4j.Service();
+	 * service.init(&quot;http://localhost:9988/backup&quot;);
+	 * </pre>
+	 * 
+	 * @param url
+	 *            is the full url to the service (e.g. http://localhost:9988/backup)
+	 */
+	makeAvailable : function(url) {
+	    this.initialized = true;
+	    this.available = true;
+	    this.url = url;
+	    this.handleWaitingCalls();
+	},
+	
+	/**
+	 * Tell this service that it is not available from the current server. This will
+	 * make the service throw exceptions when someone tries to use it.
+	 */
+	setNotAvailable : function() {
+	    this.initialized = true;
+	    this.available = false;
+	    this.handleWaitingCalls();
+	},
+	
+	/**
+	 * Perform a http GET call for a given resource.
+	 * 
+	 * @param resource
+	 *            is the resource to fetch (e.g. /myresource)
+	 * @param data
+	 *            (optional) object with data
+	 * @param success
+	 *            (optional) success callback
+	 * @param failure
+	 *            (optional) failure callback
+	 */
+	get : function(resource, data, success, failure) {
+	    this.db.web.get(this.url + resource, data, success, failure);
+	},
+	
+	/**
+	 * Perform a http DELETE call for a given resource.
+	 * 
+	 * @param resource
+	 *            is the resource to fetch (e.g. /myresource)
+	 * @param data
+	 *            (optional) object with data
+	 * @param success
+	 *            (optional) success callback
+	 * @param failure
+	 *            (optional) failure callback
+	 */
+	del : function(resource, data, success, failure) {
+		this.db.web.del(this.url + resource, data, success, failure);
+	},
+	
+	/**
+	 * Perform a http POST call for a given resource.
+	 * 
+	 * @param resource
+	 *            is the resource to fetch (e.g. /myresource)
+	 * @param data
+	 *            (optional) object with data
+	 * @param success
+	 *            (optional) success callback
+	 * @param failure
+	 *            (optional) failure callback
+	 */
+	post : function(resource, data, success, failure) {
+		this.db.web.post(this.url + resource, data, success, failure);
+	},
+	
+	/**
+	 * Perform a http PUT call for a given resource.
+	 * 
+	 * @param resource
+	 *            is the resource to fetch (e.g. /myresource)
+	 * @param data
+	 *            (optional) object with data
+	 * @param success
+	 *            (optional) success callback
+	 * @param failure
+	 *            (optional) failure callback
+	 */
+	put : function(resource, data, success, failure) {
+		this.db.web.put(this.url + resource, data, success, failure);
+	},
+	
+	/**
+	 * This method is called by all service methods before they do their work. It
+	 * will throw an exception if the service is not yet initialized, and it will
+	 * throw an exception if the service is not available with the current server.
+	 * 
+	 * It will also check if a service definition for the given service has been
+	 * loaded. If that is not the case, this will be done.
+	 * 
+	 * If all is well, the callback provided will be called with the correct "this"
+	 * context.
+	 */
+	serviceMethodPreflight : function(callback, args) {
+	    
+	    if (this.available === false)
+	    {
+	        throw new Error(
+	                "The service you are accessing is not available for this server.");
+	    } else if (!this.initialized)
+	    {
+	        this.callsWaiting.push({
+	            'method' : callback,
+	            'args' : args
+	        });
+	        return;
+	    }
+	
+	    args = args || [];
+	
+	    if (this.resources !== null)
+	    {
+	        callback.apply(this, args);
+	    } else
+	    {
+	        this.loadServiceDefinition(neo4j.proxy(function() {
+	            callback.apply(this, args);
+	        }, this));
+	    }
+	}
 
-/**
- * Contains URLs to the resources the service provides. This is lazily loaded
- * when any of the service methods are called.
- */
-neo4j.Service.prototype.resources = null;
-
-/**
- * Initialize.
- * 
- * Creates event handling system for this service, as well as initializing
- * various properties.
- * 
- * Sets the this.db attribute. Also hooks an event listener that waits for the
- * services.loaded event. If services.loaded is triggered, and this service is
- * not initialized, it is assumed that this service is not available.
- */
-neo4j.Service.prototype.__init__ = function(db) {
-
-    /**
-     * List of commands waiting to be run as soon as the service is initialized.
-     */
-    this.callsWaiting = [];
-
-    this.loadServiceDefinition = neo4j.cachedFunction(this.loadServiceDefinition,0);
-    
-    /**
-     * Event handler. This is unique for each service.
-     * 
-     * @see {@link neo4j.Events}
-     */
-    this.events = new neo4j.Events();
-
-    /**
-     * Convinience access to event bind method.
-     */
-    this.bind = neo4j.proxy(this.events.bind, this.events);
-
-    /**
-     * Convinience access to event trigger method.
-     */
-    this.trigger = neo4j.proxy(this.events.trigger, this.events);
-
-    /**
-     * A reference to the GraphDatabase instance.
-     */
-    this.db = db;
-
-    this.db.bind("services.loaded", neo4j.proxy(function() {
-        if (!this.initialized)
-        {
-            this.setNotAvailable();
-        }
-    }, this));
-
-};
-
-/**
- * Go through the list of method calls that are waiting for this service to
- * initialize, and run all of them.
- */
-neo4j.Service.prototype.handleWaitingCalls = function() {
-
-    for ( var i = 0, l = this.callsWaiting.length; i < l; i++)
-    {
-        try
-        {
-            this.serviceMethodPreflight(this.callsWaiting[i].method,
-                    this.callsWaiting[i].args);
-        } catch (e)
-        {
-            neo4j.log(e);
-        }
-    }
-
-};
-
-/**
- * Do a GET-request to the root URL for this service, store the result in
- * this.serviceDefinition.
- * 
- * Trigger service.definition.loaded-event on the service-local event handler.
- */
-neo4j.Service.prototype.loadServiceDefinition = function(callback) {
-    this.get("/", neo4j.proxy(function(data) {
-        this.resources = data.resources;
-        this.trigger("service.definition.loaded", data);
-        callback(data);
-    }, this));
-};
-
-/**
- * Initialize the service, set the base URL for api calls. <br />
- * Example: <br />
- * 
- * <pre>
- * var service = new neo4j.Service();
- * service.init(&quot;http://localhost:9988/backup&quot;);
- * </pre>
- * 
- * @param url
- *            is the full url to the service (e.g. http://localhost:9988/backup)
- */
-neo4j.Service.prototype.makeAvailable = function(url) {
-
-    this.initialized = true;
-    this.available = true;
-    this.url = url;
-    this.handleWaitingCalls();
-
-};
-
-/**
- * Tell this service that it is not available from the current server. This will
- * make the service throw exceptions when someone tries to use it.
- */
-neo4j.Service.prototype.setNotAvailable = function() {
-
-    this.initialized = true;
-    this.available = false;
-    this.handleWaitingCalls();
-
-};
-
-/**
- * Perform a http GET call for a given resource.
- * 
- * @param resource
- *            is the resource to fetch (e.g. /myresource)
- * @param data
- *            (optional) object with data
- * @param success
- *            (optional) success callback
- * @param failure
- *            (optional) failure callback
- */
-neo4j.Service.prototype.get = function(resource, data, success, failure) {
-    neo4j.Web.get(this.url + resource, data, success, failure);
-};
-
-/**
- * Perform a http DELETE call for a given resource.
- * 
- * @param resource
- *            is the resource to fetch (e.g. /myresource)
- * @param data
- *            (optional) object with data
- * @param success
- *            (optional) success callback
- * @param failure
- *            (optional) failure callback
- */
-neo4j.Service.prototype.del = function(resource, data, success, failure) {
-    neo4j.Web.del(this.url + resource, data, success, failure);
-};
-
-/**
- * Perform a http POST call for a given resource.
- * 
- * @param resource
- *            is the resource to fetch (e.g. /myresource)
- * @param data
- *            (optional) object with data
- * @param success
- *            (optional) success callback
- * @param failure
- *            (optional) failure callback
- */
-neo4j.Service.prototype.post = function(resource, data, success, failure) {
-    neo4j.Web.post(this.url + resource, data, success, failure);
-};
-
-/**
- * Perform a http PUT call for a given resource.
- * 
- * @param resource
- *            is the resource to fetch (e.g. /myresource)
- * @param data
- *            (optional) object with data
- * @param success
- *            (optional) success callback
- * @param failure
- *            (optional) failure callback
- */
-neo4j.Service.prototype.put = function(resource, data, success, failure) {
-    neo4j.Web.put(this.url + resource, data, success, failure);
-};
-
-/**
- * This method is called by all service methods before they do their work. It
- * will throw an exception if the service is not yet initialized, and it will
- * throw an exception if the service is not available with the current server.
- * 
- * It will also check if a service definition for the given service has been
- * loaded. If that is not the case, this will be done.
- * 
- * If all is well, the callback provided will be called with the correct "this"
- * context.
- */
-neo4j.Service.prototype.serviceMethodPreflight = function(callback, args) {
-    
-    if (this.available === false)
-    {
-        throw new Error(
-                "The service you are accessing is not available for this server.");
-    } else if (!this.initialized)
-    {
-        this.callsWaiting.push({
-            'method' : callback,
-            'args' : args
-        });
-        return;
-    }
-
-    args = args || [];
-
-    if (this.resources !== null)
-    {
-        callback.apply(this, args);
-    } else
-    {
-        this.loadServiceDefinition(neo4j.proxy(function() {
-            callback.apply(this, args);
-        }, this));
-    }
-};
+});
