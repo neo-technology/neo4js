@@ -253,11 +253,12 @@ _.extend(neo4j.Web.prototype, {
 	        args.failure = function() {
 	            fail.apply(this, arguments);
 	            args.userFail.apply(this, arguments);
-	        }
+	        };
+	        
 	        args.success = function() {
                 fulfill.apply(this, arguments);
                 args.userSuccess.apply(this, arguments);
-            }
+            };
 	        
 	        try {
 	            web.webProvider.ajax(args);
@@ -303,8 +304,8 @@ _.extend(neo4j.Web.prototype, {
      */
     wrapFailureCallback : function(cb) {
     	return function(ex) {
-    		if( ex instanceof neo4j.exceptions.ConnectionLostException ) {
-    			neo4j.events.trigger("web.connection.failed", [xhr]);
+    		if( typeof(ex) != "undefined" && ex instanceof neo4j.exceptions.ConnectionLostException ) {
+    			neo4j.events.trigger("web.connection.failed", _.toArray(arguments));
     		}
 
             cb.apply(this, arguments);
@@ -325,8 +326,11 @@ _.extend(neo4j.Web.prototype, {
         
         data = args.length > 0 && !_.isFunction(args[0]) ? args.shift() : null;       
         
-        success = args.length > 0 ? args.shift() : function() {};
-        failure = args.length > 0 ? args.shift() : function() {};
+        success = args.length > 0 ? args.shift() : null;
+        failure = args.length > 0 ? args.shift() : null;
+        
+        success = _.isFunction(success) ? success : function() {};
+        failure = _.isFunction(failure) ? failure : function() {};
         
         return {
             method : method, 

@@ -61,14 +61,14 @@ neo4j.Events.prototype.trigger = function(key, data) {
         var data = data || {};
 
         var eventHandlers = this.handlers[key];
-        var event = $.extend({
+        var event = _.extend({
             key : key,
             data : data
         }, this.context);
 
         for ( var i = 0, o = eventHandlers.length; i < o; i++)
         {
-            setTimeout((function(handler) {
+            neo4j.setTimeout((function(handler) {
                 return function() {
                     try
                     {
