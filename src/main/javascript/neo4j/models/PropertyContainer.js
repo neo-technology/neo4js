@@ -46,6 +46,13 @@ _.extend(neo4j.models.PropertyContainer.prototype, {
         return this.getSelf() !== null;
     },
     
+    /**
+     * Check if a property exists.
+     */
+    hasProperty : function(key) {
+       return key in this._data; 
+    },
+    
 	/**
 	 * Get a property by key.
 	 */

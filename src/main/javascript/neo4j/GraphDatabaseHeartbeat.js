@@ -221,21 +221,28 @@ neo4j.GraphDatabaseHeartbeat.prototype.processMonitorData = function(data) {
  */
 neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
 
-    var retryMethod = this.waitForPulse;
-    this.db.get("", function(data) {
-        if( data === null ) {
-            setTimeout(function(){
-                retryMethod(callback);
+    if(!this.pulsePromise) {
+        var heartbeat = this,
+            getMethod = this.db.get;
+        this.pulsePromise = new neo4j.Promise(function(fulfill) {
+            var args = { interval : null };
+            
+            args.interval = neo4j.setInterval(function() {
+                getMethod("", function(data) {
+                    if( data !== null ) {
+                        neo4j.clearInterval(args.interval);
+                        heartbeat.pulsePromise = null;
+                        fulfill(true);
+                    }
+                });
             }, 4000);
-        } else {
-            callback(true);
-        }
-    }, function(err) {
-    	setTimeout(function(){
-            retryMethod(callback);
-        }, 4000);
-    });
-
+        });
+    }
+    
+    this.pulsePromise.addFulfilledHandler(callback);
+    
+    return this.pulsePromise;
+    
 };
 
 /**
@@ -245,12 +252,14 @@ neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
  * The monitor data has a concept of granularity - if you ask for a wide enough
  * timespan, you won't get any data back. This is because the data available is
  * to "fine grained" to be visible in your wide time span (e.g. there is data
- * for the last hour, but you asked for data from a full year).
+ * for the last hour, but you asked for data from a full year, the data from
+ * a single hour is not considered reliable when looking at such a large time 
+ * span).
  * 
- * This creates a problem since there might be data for a full year. So what we
- * do is, we ask for a year. If we get an empty result, this method will make
- * the timespan we ask for smaller and smaller, until we get start getting data
- * back from the server.
+ * This creates a problem since there might be data for a full year, and we'd
+ * like to show that. So what we do is, we ask for a year. If we get an empty 
+ * result, this method will make the timespan we ask for smaller and smaller, 
+ * until we get start getting data back from the server.
  * 
  * @return {object} An object with a dataStart and a dataEnd key.
  */

@@ -88,7 +88,8 @@ neo4j.GraphDatabase = function(url, manageUrl, webClient)
     this.rel = this.relationship;
     this.referenceNode = this.getReferenceNode;
     
-    _.bindAll(this, 'getServiceDefinition', 'getReferenceNode', 'node', 'relationship', 'getReferenceNodeUrl');
+    _.bindAll(this, 'getServiceDefinition', 'getReferenceNode', 'node', 
+              'relationship', 'getReferenceNodeUrl', 'get', 'put', 'post', 'del');
 
 };
 
