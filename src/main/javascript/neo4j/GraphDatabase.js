@@ -204,17 +204,12 @@ _.extend(neo4j.GraphDatabase.prototype, {
      * type in use in the database. 
      */
     getAvailableRelationshipTypes : function() {
-        if(!this._availableRelationshipTypesPromise) {
-            var db = this;
-            var p = this.getServiceDefinition().then(function(service, fulfill, fail){
-                db.web.get(service.relationship_types, function(types) {
-                    fulfill(types);
-                }, fail);
-            });
-            this._availableRelationshipTypesPromise = p;
-        }
-        
-        return this._availableRelationshipTypesPromise;
+        var db = this;
+        return this.getServiceDefinition().then(function(service, fulfill, fail){
+            db.web.get(service.relationship_types, function(types) {
+                fulfill(types);
+            }, fail);
+        });
     },
 
     /**
