@@ -84,7 +84,7 @@ neo4j.GraphDatabase = function(url, webClient)
     this.referenceNode = this.getReferenceNode;
     
     _.bindAll(this, 'getServiceDefinition', 'getReferenceNode', 'node', 
-              'relationship', 'getReferenceNodeUrl', 'get', 'put', 'post', 'del');
+              'relationship', 'getReferenceNodeUrl', 'getAvailableRelationshipTypes', 'get', 'put', 'post', 'del');
 
 };
 
@@ -198,6 +198,24 @@ _.extend(neo4j.GraphDatabase.prototype, {
     {
         return this.node(this.getReferenceNodeUrl());
     },
+    
+    /**
+     * @return A promise for an array of strings, each string a relationship
+     * type in use in the database. 
+     */
+    getAvailableRelationshipTypes : function() {
+        if(!this._availableRelationshipTypesPromise) {
+            var db = this;
+            var p = this.getServiceDefinition().then(function(service, fulfill, fail){
+                db.web.get(service.relationship_types, function(types) {
+                    fulfill(types);
+                }, fail);
+            });
+            this._availableRelationshipTypesPromise = p;
+        }
+        
+        return this._availableRelationshipTypesPromise;
+    },
 
     /**
      * @return A promise for the reference node url.
@@ -207,6 +225,45 @@ _.extend(neo4j.GraphDatabase.prototype, {
         return this.getServiceDefinition().then(function(serviceDefinition, fulfill) {
             fulfill(serviceDefinition.reference_node);
         });
+    },
+    
+
+
+    /**
+     * @return A promise for a map of services, as they are returned
+     *         from a GET call to the server data root.
+     */
+    getServiceDefinition : function()
+    {
+        if (typeof (this._serviceDefinitionPromise) === "undefined")
+        {
+            var db = this;
+            this._serviceDefinitionPromise = this.getDiscoveryDocument().then(function( discovery, fulfill, fail ) {
+                db.web.get( discovery.data , function(resources)
+                {
+                    fulfill(resources);
+                });
+            });
+        }
+
+        return this._serviceDefinitionPromise;
+    },
+    
+    getDiscoveryDocument : function() {
+        if (typeof (this._discoveryDocumentPromise) === "undefined")
+        {
+            var db = this;
+            this._discoveryDocumentPromise = new neo4j.Promise(function(
+                    fulfill, fail)
+            {
+                db.web.get(db.url, function(resources)
+                {
+                    fulfill(resources);
+                });
+            });
+        }
+
+        return this._discoveryDocumentPromise
     },
 
     /**
@@ -278,43 +335,6 @@ _.extend(neo4j.GraphDatabase.prototype, {
     put : function(resource, data, success, failure)
     {
         this.web.put(this.url + resource, data, success, failure);
-    },
-
-    /**
-     * @return A promise for a map of services, as they are returned
-     *         from a GET call to the server data root.
-     */
-    getServiceDefinition : function()
-    {
-        if (typeof (this._serviceDefinitionPromise) === "undefined")
-        {
-            var db = this;
-            this._serviceDefinitionPromise = this.getDiscoveryDocument().then(function( discovery, fulfill, fail ) {
-                db.web.get( discovery.data , function(resources)
-                {
-                    fulfill(resources);
-                });
-            });
-        }
-
-        return this._serviceDefinitionPromise;
-    },
-    
-    getDiscoveryDocument : function() {
-        if (typeof (this._discoveryDocumentPromise) === "undefined")
-        {
-            var db = this;
-            this._discoveryDocumentPromise = new neo4j.Promise(function(
-                    fulfill, fail)
-            {
-                db.web.get(db.url, function(resources)
-                {
-                    fulfill(resources);
-                });
-            });
-        }
-
-        return this._discoveryDocumentPromise
     },
 
     /**

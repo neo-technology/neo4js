@@ -53,6 +53,7 @@ var mockWebProvider = {
     
     	webmock("GET", "/db/data/", {
 		  "relationship_index" : "http://localhost:7474/db/data/index/relationship",
+		  "relationship_types" : "http://localhost:7474/db/data/relationships/types",
 		  "node" : "http://localhost:7474/db/data/node",
 		  "extensions_info" : "http://localhost:7474/db/data/ext",
 		  "node_index" : "http://localhost:7474/db/data/index/node",

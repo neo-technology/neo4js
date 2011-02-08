@@ -640,5 +640,32 @@ _.extend(GraphDatabaseTest.prototype, {
         
         this.assertTrue("Promise should be fulfilled.", typeof(result.relationship) != "undefined");
         this.assertTrue("Promise should return a Relationship.", result.relationship instanceof neo4j.models.Relationship);
+    },
+    
+    testGetAvailableRelationshipTypes : function() {
+        clearWebmock();
+        mockServiceDefinition();
+        
+        var db = mockedGraphDatabase(),
+            result = {},
+            types = ['one', 'two'];
+        
+        webmock("GET", "http://localhost:7474/db/data/relationships/types", types);
+        
+        var typesPromise = db.getAvailableRelationshipTypes();
+        
+        this.assertTrue("GraphDatabase#getAvailableRelationshipTypes method should return a value.", typeof(typesPromise) != "undefined");
+        this.assertTrue("GraphDatabase#getAvailableRelationshipTypes method should return a promise.", typesPromise instanceof neo4j.Promise);
+     
+        typesPromise.then(function(returnedTypes) {
+           result.types = returnedTypes; 
+        });
+        
+        this.assertTrue("Promise should be fulfilled, and return types.", typeof(result.types) != "undefined");
+        this.assertTrue("Types should be an array.", _.isArray(types));
+        
+        for(var i=0, l=types.length; i<l; i++) {
+            this.assertEquals("Types should match the mocked ones.", types[i], result.types[i]);
+        }
     }
 });
