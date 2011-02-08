@@ -25,6 +25,27 @@ GraphDatabaseTest.prototype = new TestCase();
 
 _.extend(GraphDatabaseTest.prototype, {
 	
+    testInstantiateClient : function() {
+        clearWebmock();
+        var serverRoot = "theserverroot",
+            mngUrl = "/db/manage/",
+            dataUrl = "thedataurl";
+        
+        mockServiceDefinition();
+        
+        webmock("GET", serverRoot, {
+           "management" : mngUrl,
+           "data" : dataUrl
+        });
+        
+        var db = new neo4j.GraphDatabase(serverRoot, mockWeb);
+        
+        var promisedDiscovery = db.getDiscoveryDocument();
+        
+        this.assertTrue("Result should be a promise.", promisedDiscovery instanceof neo4j.Promise);
+        
+    },
+    
     testCreateNode : function() {
         var mockedUrl = "someurl";
     

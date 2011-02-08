@@ -45,6 +45,12 @@ var mockWebProvider = {
      * instance that works with /db/data and /db/manage as base urls.
      */
     mockServiceDefinition : function() {
+    
+        webmock("GET", "http://localhost/", {
+           "data":"/db/data/",
+           "management": "/db/manage/"
+        });
+    
     	webmock("GET", "/db/data/", {
 		  "relationship_index" : "http://localhost:7474/db/data/index/relationship",
 		  "node" : "http://localhost:7474/db/data/node",
@@ -110,5 +116,5 @@ var webmock = mockWebProvider.mock,
     mockWeb = new neo4j.Web(mockWebProvider);
 
 function mockedGraphDatabase() {
-	return new neo4j.GraphDatabase("/db/data/","/db/manage/", mockWeb);
+	return new neo4j.GraphDatabase("http://localhost/", mockWeb);
 }

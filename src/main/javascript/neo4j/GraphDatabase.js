@@ -35,18 +35,13 @@
  *            the url to the Management endpoint
  * @returns a new GraphDatabase instance
  */
-neo4j.GraphDatabase = function(url, manageUrl, webClient)
+neo4j.GraphDatabase = function(url, webClient)
 {
 
     /**
-     * The url to the REST server.
+     * The url to the REST server's discovery document
      */
     this.url = url;
-
-    /**
-     * Url to the management server, may be null.
-     */
-    this.manageUrl = manageUrl || null;
 
     /**
      * Event handler, instance of {@link neo4j.Events}.
@@ -294,7 +289,22 @@ _.extend(neo4j.GraphDatabase.prototype, {
         if (typeof (this._serviceDefinitionPromise) === "undefined")
         {
             var db = this;
-            this._serviceDefinitionPromise = new neo4j.Promise(function(
+            this._serviceDefinitionPromise = this.getDiscoveryDocument().then(function( discovery, fulfill, fail ) {
+                db.web.get( discovery.data , function(resources)
+                {
+                    fulfill(resources);
+                });
+            });
+        }
+
+        return this._serviceDefinitionPromise;
+    },
+    
+    getDiscoveryDocument : function() {
+        if (typeof (this._discoveryDocumentPromise) === "undefined")
+        {
+            var db = this;
+            this._discoveryDocumentPromise = new neo4j.Promise(function(
                     fulfill, fail)
             {
                 db.web.get(db.url, function(resources)
@@ -304,7 +314,7 @@ _.extend(neo4j.GraphDatabase.prototype, {
             });
         }
 
-        return this._serviceDefinitionPromise;
+        return this._discoveryDocumentPromise
     },
 
     /**

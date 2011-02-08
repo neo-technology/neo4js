@@ -30,7 +30,6 @@ neo4j.GraphDatabaseManager = function(db) {
 	_.bindAll(this, 'discoverServices');
 	
     this.db = db;
-    this.url = db.manageUrl;
 
     /**
      * Backup service, instance of {@link neo4j.services.BackupService}
@@ -119,7 +118,9 @@ _.extend(neo4j.GraphDatabaseManager.prototype,{
 	 */
 	discoverServices : function() {
 	
-	    this.db.web.get(this.url,
+        var manage = this;
+        this.db.getDiscoveryDocument().then(function(discovery) {
+	        manage.db.web.get(discovery.management,
     	    // Success
     	    neo4j.proxy(function(serviceDefinition) {
     	        this.services = serviceDefinition.services;
@@ -135,12 +136,13 @@ _.extend(neo4j.GraphDatabaseManager.prototype,{
     	
     	        this.db.trigger("services.loaded");
     	
-    	    }, this),
+    	    }, manage),
     	    // Failure
     	    neo4j.proxy(function(fail) {
     	        neo4j.log("Unable to fetch service descriptions for server "
     	                + this.url + ". Server management will be unavailable.");
     	    }, this));
+        });
 	
 	}
 });
