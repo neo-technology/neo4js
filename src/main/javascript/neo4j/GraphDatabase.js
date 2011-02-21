@@ -84,7 +84,7 @@ neo4j.GraphDatabase = function(url, webClient)
     this.referenceNode = this.getReferenceNode;
     
     _.bindAll(this, 'getServiceDefinition', 'getReferenceNode', 'node', 
-              'relationship', 'getReferenceNodeUrl', 'getAvailableRelationshipTypes', 'get', 'put', 'post', 'del');
+              'relationship', 'getReferenceNodeUrl', 'getAvailableRelationshipTypes', 'get', 'put', 'post', 'del', 'forceRediscovery');
 
 };
 
@@ -222,7 +222,7 @@ _.extend(neo4j.GraphDatabase.prototype, {
     getReferenceNodeUrl : function()
     {
         return this.getServiceDefinition().then(function(serviceDefinition, fulfill, fail) {
-            if(serviceDefinition.reference_node) {
+            if( typeof(serviceDefinition.reference_node) !== "undefined") {
                 fulfill(serviceDefinition.reference_node);
             } else {
                 fail();
@@ -389,6 +389,15 @@ _.extend(neo4j.GraphDatabase.prototype, {
             url : this.url,
             manageUrl : this.manageUrl };
 
+    },
+    
+    /**
+     * A call to this method will force a rediscovery of the 
+     * server the next time something requests info about the
+     * server discovery document.
+     */
+    forceRediscovery : function() {
+        del(this._discoveryDocumentPromise);
     }
 
 });

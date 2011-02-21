@@ -96,10 +96,17 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
      * @return A promise that will be fulfilled when the node is deleted.
      */
     remove : function() {
-        var node = this, web = this.db.web, hasDeletedRelationships = false;
+        var node = this, web = this.db.web, hasDeletedRelationships = false,
+            db = this.db, nodeUrl = node.getSelf();
+        
         return new neo4j.Promise(function(fulfill, fail) {
             web.del(node.getSelf(), function() {
-                fulfill(true);
+                db.getReferenceNodeUrl().then(function(url) {
+                    if(url == nodeUrl) {
+                        db.forceRediscovery();
+                    }
+                    fulfill(true);
+                });
             }, function(ex) {
                 if(ex.isConflict() && !hasDeletedRelationships) {
                     // Need to remove relationships
