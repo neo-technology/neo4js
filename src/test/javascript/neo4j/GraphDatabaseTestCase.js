@@ -640,6 +640,19 @@ _.extend(GraphDatabaseTest.prototype, {
         
         this.assertTrue("Promise should be fulfilled.", typeof(result.relationship) != "undefined");
         this.assertTrue("Promise should return a Relationship.", result.relationship instanceof neo4j.models.Relationship);
+        
+        // Test using only urls
+        relPromise = db.rel("http://localhost:7474/db/data/node/0", "KNOWS", "http://localhost:7474/db/data/node/1");
+        
+        relPromise.then(function(relationship){
+            result.relationship = relationship;
+        });
+        
+        this.assertTrue("GraphDatabase#rel method should return a value.", typeof(relPromise) != "undefined");
+        this.assertTrue("GraphDatabase#rel method should return a promise.", relPromise instanceof neo4j.Promise);
+        
+        this.assertTrue("Promise should be fulfilled.", typeof(result.relationship) != "undefined");
+        this.assertTrue("Promise should return a Relationship.", result.relationship instanceof neo4j.models.Relationship);
     },
     
     testGetAvailableRelationshipTypes : function() {

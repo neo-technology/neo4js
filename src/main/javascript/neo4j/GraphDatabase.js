@@ -101,22 +101,26 @@ _.extend(neo4j.GraphDatabase.prototype, {
     {
         var db = this,
             promisedArg = neo4j.Promise.wrap(arg);
-        return promisedArg.then(function(arg, fulfill, fail) {
-            if (typeof (arg) === "object")
-            {
-                // Create a new node
-                var node = new neo4j.models.Node({data : arg }, db);
-                node.save().then(function(savedNode) {
-                    fulfill(savedNode);
-                }, fail);
-            } else
-            {
-                // Fetch a node
-                var node = new neo4j.models.Node({ self : arg }, db);
-                node.fetch().then(function(fetchedNode) {
-                    fulfill(fetchedNode);
-                }, fail);
-            }
+        return promisedArg.then(
+            function(arg, fulfill, fail) {
+                if (typeof (arg) === "object")
+                {
+                    // Create a new node
+                    var node = new neo4j.models.Node({data : arg }, db);
+                    node.save().then(function(savedNode) {
+                        fulfill(savedNode);
+                    }, fail);
+                } else
+                {
+                    // Fetch a node
+                    var node = new neo4j.models.Node({ self : arg }, db);
+                    node.fetch().then(function(fetchedNode) {
+                        fulfill(fetchedNode);
+                    }, fail);
+                }
+            }, function(err) {
+                // Promised arg broken
+                fail(err);
         });
     },
 
@@ -217,8 +221,12 @@ _.extend(neo4j.GraphDatabase.prototype, {
      */
     getReferenceNodeUrl : function()
     {
-        return this.getServiceDefinition().then(function(serviceDefinition, fulfill) {
-            fulfill(serviceDefinition.reference_node);
+        return this.getServiceDefinition().then(function(serviceDefinition, fulfill, fail) {
+            if(serviceDefinition.reference_node) {
+                fulfill(serviceDefinition.reference_node);
+            } else {
+                fail();
+            }
         });
     },
     
