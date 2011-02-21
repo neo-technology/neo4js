@@ -118,7 +118,7 @@ _.extend(neo4j.GraphDatabase.prototype, {
                         fulfill(fetchedNode);
                     }, fail);
                 }
-            }, function(err) {
+            }, function(err, fulfill, fail) {
                 // Promised arg broken
                 fail(err);
         });

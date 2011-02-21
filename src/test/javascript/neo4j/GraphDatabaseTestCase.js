@@ -591,6 +591,33 @@ _.extend(GraphDatabaseTest.prototype, {
         this.assertEquals("Node should have properties provided by server.", "myvalue", result.node.getProperty("mykey"));
     },
     
+    testGetNonExistantReferenceNode : function() {
+        clearWebmock();
+        mockServiceDefinition();
+        
+        webmock("GET", "/db/data/", {
+            "relationship_index" : "http://localhost:7474/db/data/index/relationship",
+            "relationship_types" : "http://localhost:7474/db/data/relationships/types",
+            "node" : "http://localhost:7474/db/data/node",
+            "extensions_info" : "http://localhost:7474/db/data/ext",
+            "node_index" : "http://localhost:7474/db/data/index/node",
+            "extensions" : {
+            }
+        });
+        
+        var db = mockedGraphDatabase(),
+            result = {};
+        
+        var nodePromise = db.referenceNode();
+        
+        nodePromise.then(null, function(node){
+            result.called = true;
+        });
+        
+        this.assertTrue("Promise should deliver a result.", typeof(result.called) != "undefined");
+        this.assertTrue("Promise should fail.", result.called == true);
+    },
+    
     testCreateRelationship : function() {
         clearWebmock();
         mockServiceDefinition();
