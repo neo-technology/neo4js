@@ -397,8 +397,8 @@ _.extend(neo4j.GraphDatabase.prototype, {
      * server discovery document.
      */
     forceRediscovery : function() {
-        del(this._discoveryDocumentPromise);
-        del(this._serviceDefinitionPromise);
+        delete this._discoveryDocumentPromise;
+        delete this._serviceDefinitionPromise;
     }
 
 });
