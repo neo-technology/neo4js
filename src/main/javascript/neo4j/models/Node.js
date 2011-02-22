@@ -106,7 +106,7 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
                         db.forceRediscovery();
                     }
                     fulfill(true);
-                });
+                }, fail);
             }, function(ex) {
                 if(ex.isConflict() && !hasDeletedRelationships) {
                     // Need to remove relationships
@@ -119,8 +119,8 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
                         hasDeletedRelationships = true;
                         node.remove().then(function() {
                             fulfill(true);
-                        });
-                    });
+                        }, fail);
+                    }, fail);
                 }
             });
         });

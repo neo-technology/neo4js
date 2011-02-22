@@ -60,7 +60,7 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
                 }, function(definition) {
                     rel._init(definition);
                     fulfill(rel);
-                });
+                }, fail);
             });
         } else
         {
