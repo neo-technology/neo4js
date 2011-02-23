@@ -116,12 +116,11 @@ _.extend(neo4j.GraphDatabase.prototype, {
                     var node = new neo4j.models.Node({ self : arg }, db);
                     node.fetch().then(function(fetchedNode) {
                         fulfill(fetchedNode);
-                    }, fail);
+                    }, function(){
+                        fail(new neo4j.exceptions.NotFoundException(arg));
+                    });
                 }
-            }, function(err, fulfill, fail) {
-                // Promised arg broken
-                fail(err);
-        });
+            });
     },
 
     /**
@@ -150,7 +149,9 @@ _.extend(neo4j.GraphDatabase.prototype, {
                var relationship = new neo4j.models.Relationship({self:url}, db);
                relationship.fetch().then(function(fetchedRelationship) {
                   fulfill(fetchedRelationship); 
-               }, fail);
+               }, function() {
+                   fail(new neo4j.exceptions.NotFoundException(url));
+               });
             });
         } else {
             // Create relationship

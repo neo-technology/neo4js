@@ -53,20 +53,29 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
         if ( ! this.exists() )
         {
             return this.getStartNode().then(function(node, fulfill, fail) {
-                web.post(node.getCreateRelationshipUrl(), {
+                var req = web.post(node.getCreateRelationshipUrl(), {
                     to: rel._endUrl, 
                     type: rel.getType(), 
-                    data: rel.getProperties()
-                }, function(definition) {
-                    rel._init(definition);
+                    data: rel.getProperties()});
+               
+                req.then(
+                function(response) {
+                    rel._init(response.data);
                     fulfill(rel);
-                }, fail);
+                }, function(response) {
+                    if(response.error && response.error.data && response.error.data.message && response.error.data.message.indexOf(rel._endUrl) > -1) {
+                        // Target node does not exist.
+                        fail(new neo4j.exceptions.NotFoundException(rel._endUrl));
+                    } else {
+                        fail(response);
+                    }
+                });
             });
         } else
         {
             return new neo4j.Promise(function(fulfill, fail)
             {
-                web.put(rel._urls.properties, rel.getProperties(), function(){
+                web.put(rel._urls.properties, rel.getProperties()).then(function(){
                     fulfill(rel);
                 }, fail);
             });
@@ -84,9 +93,8 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
         var rel = this, web = this.db.web;
         return new neo4j.Promise(function(fulfill, fail)
         {
-            web.get(rel._self, function(definition)
-            {
-                rel._init(definition);
+            web.get(rel._self).then(function(response) {
+                rel._init(response.data);
                 fulfill(rel);
             }, fail);
         });
@@ -100,7 +108,7 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
     remove : function() {
         var rel = this, web = this.db.web;
         return new neo4j.Promise(function(fulfill, fail) {
-            web.del(rel.getSelf(), function() {
+            web.del(rel.getSelf()).then(function() {
                 fulfill(true);
             }, fail);
         });

@@ -55,8 +55,8 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
             return new neo4j.Promise(function(fulfill, fail)
             {
                 node.db.getServiceDefinition().then(function(dbDefinition) {
-                    web.post(dbDefinition.node, node._data, function(definition) {
-                        node._init(definition);
+                    web.post(dbDefinition.node, node._data).then(function(response) {
+                        node._init(response.data);
                         fulfill(node);
                     }, fail);
                 }, fail);
@@ -83,9 +83,9 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
         var node = this, web = this.db.web;
         return new neo4j.Promise(function(fulfill, fail)
         {
-            web.get(node._self, function(definition)
+            web.get(node._self).then(function(response)
             {
-                node._init(definition);
+                node._init(response.data);
                 fulfill(node);
             }, fail);
         });
@@ -100,15 +100,15 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
             db = this.db, nodeUrl = node.getSelf();
         
         return new neo4j.Promise(function(fulfill, fail) {
-            web.del(node.getSelf(), function() {
+            web.del(node.getSelf()).then(function() {
                 db.getReferenceNodeUrl().then(function(url) {
                     if(url == nodeUrl) {
                         db.forceRediscovery();
                     }
                     fulfill(true);
                 }, fail);
-            }, function(ex) {
-                if(ex.isConflict() && !hasDeletedRelationships) {
+            }, function(response) {
+                if(response.error.isConflict() && !hasDeletedRelationships) {
                     // Need to remove relationships
                     node.getRelationships().then(function(rels) {
                         _.each(rels, function(rel) {
@@ -172,14 +172,14 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
         }
         
         return new neo4j.Promise(function(fulfill, fail) {
-            node.db.web.get(url, function(relList) {
+            node.db.web.get(url).then(function(response) {
                 var instances = _.map(
-                        relList, 
+                        response.data, 
                         function(r) { 
                             return new neo4j.models.Relationship(r, node.db);
                         });
                 fulfill(instances);
-            });
+            }, fail);
         });
     },
 

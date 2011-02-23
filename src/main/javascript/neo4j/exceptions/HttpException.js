@@ -23,10 +23,10 @@
  */
 neo4j.exceptions.HttpException = function(status, data, req, message) {
     var message = message || "A server error or a network error occurred. Status code: " + status + ".";
-    Error.call(this, message);
     this.status = status;
     this.data = data || {};
     this.req = req || {};
+    Error.call(this, message);
 };
 
 neo4j.exceptions.HttpException.prototype = new Error();

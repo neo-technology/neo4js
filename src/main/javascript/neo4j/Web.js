@@ -251,12 +251,12 @@ _.extend(neo4j.Web.prototype, {
         
 	    return new neo4j.Promise(function(fulfill, fail) {
 	        args.failure = function() {
-	            fail.apply(this, arguments);
+	            fail.call(this, {error:arguments[0], args:arguments});
 	            args.userFail.apply(this, arguments);
 	        };
 	        
 	        args.success = function() {
-                fulfill.apply(this, arguments);
+                fulfill.call(this, {data:arguments[0],args:arguments});
                 args.userSuccess.apply(this, arguments);
             };
 	        

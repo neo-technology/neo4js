@@ -309,8 +309,8 @@ _.extend(GraphDatabaseTest.prototype, {
             });
         });
         
-        this.assertEquals("Server should have been called.", result.called, true);
-        this.assertEquals("Promise should have been fulfilled", result.promiseFulfilled, true);
+        this.assertEquals("Server should have been called.", true, result.called);
+        this.assertEquals("Promise should have been fulfilled", true, result.promiseFulfilled);
     },
     
     testGetNodeOrRelationship : function() {
@@ -680,6 +680,54 @@ _.extend(GraphDatabaseTest.prototype, {
         
         this.assertTrue("Promise should be fulfilled.", typeof(result.relationship) != "undefined");
         this.assertTrue("Promise should return a Relationship.", result.relationship instanceof neo4j.models.Relationship);
+    },
+    
+    testCreateRelationshipToNonExistantNode : function() {
+        clearWebmock();
+        mockServiceDefinition();
+        
+        var db = mockedGraphDatabase(),
+            result = {};
+        
+        webmock("POST", "http://localhost:7474/db/data/node/0/relationships", function(req){
+            req.failure(new neo4j.exceptions.HttpException(400, {
+                "message" : "For input string: \"jibberish\"",
+                "exception" : "org.neo4j.server.rest.repr.BadInputException: For input string: \"jibberish\"",
+                "stacktrace" : [ "org.neo4j.server.rest.web.RestfulGraphDatabase.extractNodeId(RestfulGraphDatabase.java:105)", "org.neo4j.server.rest.web.RestfulGraphDatabase.createRelationship(RestfulGraphDatabase.java:253)", "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)", "sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)", "sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)", "java.lang.reflect.Method.invoke(Method.java:597)", "com.sun.jersey.server.impl.model.method.dispatch.AbstractResourceMethodDispatchProvider$ResponseOutInvoker._dispatch(AbstractResourceMethodDispatchProvider.java:184)", "com.sun.jersey.server.impl.model.method.dispatch.ResourceJavaMethodDispatcher.dispatch(ResourceJavaMethodDispatcher.java:67)", "com.sun.jersey.server.impl.uri.rules.HttpMethodRule.accept(HttpMethodRule.java:276)", "com.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:133)", "com.sun.jersey.server.impl.uri.rules.ResourceClassRule.accept(ResourceClassRule.java:83)", "com.sun.jersey.server.impl.uri.rules.RightHandPathRule.accept(RightHandPathRule.java:133)", "com.sun.jersey.server.impl.uri.rules.RootResourceClassesRule.accept(RootResourceClassesRule.java:71)", "com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1171)", "com.sun.jersey.server.impl.application.WebApplicationImpl._handleRequest(WebApplicationImpl.java:1103)", "com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1053)", "com.sun.jersey.server.impl.application.WebApplicationImpl.handleRequest(WebApplicationImpl.java:1043)", "com.sun.jersey.spi.container.servlet.WebComponent.service(WebComponent.java:406)", "com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:477)", "com.sun.jersey.spi.container.servlet.ServletContainer.service(ServletContainer.java:662)", "javax.servlet.http.HttpServlet.service(HttpServlet.java:820)", "org.mortbay.jetty.servlet.ServletHolder.handle(ServletHolder.java:511)", "org.mortbay.jetty.servlet.ServletHandler.handle(ServletHandler.java:390)", "org.mortbay.jetty.servlet.SessionHandler.handle(SessionHandler.java:182)", "org.mortbay.jetty.handler.ContextHandler.handle(ContextHandler.java:765)", "org.mortbay.jetty.handler.HandlerCollection.handle(HandlerCollection.java:114)", "org.mortbay.jetty.handler.HandlerWrapper.handle(HandlerWrapper.java:152)", "org.mortbay.jetty.Server.handle(Server.java:326)", "org.mortbay.jetty.HttpConnection.handleRequest(HttpConnection.java:542)", "org.mortbay.jetty.HttpConnection$RequestHandler.content(HttpConnection.java:943)", "org.mortbay.jetty.HttpParser.parseNext(HttpParser.java:756)", "org.mortbay.jetty.HttpParser.parseAvailable(HttpParser.java:218)", "org.mortbay.jetty.HttpConnection.handle(HttpConnection.java:404)", "org.mortbay.jetty.bio.SocketConnector$Connection.run(SocketConnector.java:228)", "org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)" ]
+            }, req));
+        });
+        
+        var relPromise = db.rel(db.referenceNode(), "KNOWS", "jibberish");
+        
+        relPromise.then(null, function(error){
+            result.error = error;
+        });
+       
+        this.assertTrue("GraphDatabase#rel method should return a value.", typeof(relPromise) != "undefined");
+        this.assertTrue("GraphDatabase#rel method should return a promise.", relPromise instanceof neo4j.Promise);
+        
+        this.assertTrue("Promise should fail", typeof(result.error) != "undefined");
+        this.assertTrue("Error should be NotFoundException", result.error instanceof neo4j.exceptions.NotFoundException);
+    },
+    
+    testCreateRelationshipFromNonExistantNode : function() {
+        clearWebmock();
+        mockServiceDefinition();
+        
+        var db = mockedGraphDatabase(),
+            result = {};
+        
+        var relPromise = db.rel("jibberish", "KNOWS", db.referenceNode());
+        
+        relPromise.then(null, function(error){
+            result.error = error;
+        });
+       
+        this.assertTrue("GraphDatabase#rel method should return a value.", typeof(relPromise) != "undefined");
+        this.assertTrue("GraphDatabase#rel method should return a promise.", relPromise instanceof neo4j.Promise);
+        
+        this.assertTrue("Promise should fail", typeof(result.error) != "undefined");
+        this.assertTrue("Error should be NotFoundException", result.error instanceof neo4j.exceptions.NotFoundException);
     },
     
     testGetAvailableRelationshipTypes : function() {
