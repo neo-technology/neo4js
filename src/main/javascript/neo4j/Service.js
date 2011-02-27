@@ -116,8 +116,8 @@ neo4j.Service.resourceFactory = function(args) {
      */
     var resourceFunction = function() {
       
-        after = neo4j.proxy(after,this);
-        errorHandler = neo4j.proxy(errorHandler,this);
+        var proxiedAfter = neo4j.proxy(after,this);
+        var proxiedErrorHandler = neo4j.proxy(errorHandler,this);
         
         // Figure out what URL to call
         if (urlArgCount > 0)
@@ -157,16 +157,16 @@ neo4j.Service.resourceFactory = function(args) {
         if (data !== null)
         {
         	this.db.web.ajax(args.method, url, data, function(data) {
-                after(data, callback);
+                proxiedAfter(data, callback);
             }, function(error) {
-                errorHandler(callback, error);
+                proxiedErrorHandler(callback, error);
             });
         } else
         {
         	this.db.web.ajax(args.method, url, function(data) {
-                after(data, callback);
+                proxiedAfter(data, callback);
             }, function(error) {
-                errorHandler(callback, error); 
+                proxiedErrorHandler(callback, error); 
             });
         }
 
