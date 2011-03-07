@@ -231,8 +231,16 @@ _.extend(neo4j.GraphDatabase.prototype, {
         });
     },
     
-
-
+    nodeUri : function(id) {
+        return this.getServiceDefinition().then(function(def, fulfill) {
+            if(/^[0-9]+$/i.test(id)) {
+                fulfill(def.node+"/"+id);
+            } else {
+                fulfill(id);
+            }
+        });
+    },
+    
     /**
      * @return A promise for a map of services, as they are returned
      *         from a GET call to the server data root.

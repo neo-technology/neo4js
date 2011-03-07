@@ -28,7 +28,7 @@ neo4j.services.JmxService = function(db) {
 	neo4j.Service.call(this,db);
 
     // Kernelinstance gets called a lot, cache each result for two seconds
-    //this.kernelInstance = neo4j.cachedFunction( this.kernelInstance, 0, 2000);
+    this.kernelInstance = neo4j.cachedFunction( this.kernelInstance, 0, 2000);
     
 };
 

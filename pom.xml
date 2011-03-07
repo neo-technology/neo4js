@@ -104,6 +104,7 @@
 								<include>neo4j/exceptions/HttpException-min.js</include>
 								<include>neo4j/exceptions/ConnectionLostException-min.js</include>
 								<include>neo4j/exceptions/NotFoundException-min.js</include>
+								<include>neo4j/exceptions/InvalidDataException-min.js</include>
 
 								<include>neo4j/setTimeout-min.js</include>
 								<include>neo4j/setInterval-min.js</include>

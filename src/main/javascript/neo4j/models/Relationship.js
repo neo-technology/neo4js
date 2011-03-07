@@ -94,8 +94,12 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
         return new neo4j.Promise(function(fulfill, fail)
         {
             web.get(rel._self).then(function(response) {
-                rel._init(response.data);
-                fulfill(rel);
+                if(response.data && response.data.self && response.data.start && response.data.end) {
+                    rel._init(response.data);
+                    fulfill(rel);
+                } else {
+                    fail(new neo4j.exceptions.InvalidDataException());
+                }
             }, fail);
         });
     },

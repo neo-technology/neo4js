@@ -85,8 +85,12 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
         {
             web.get(node._self).then(function(response)
             {
-                node._init(response.data);
-                fulfill(node);
+                if(response.data && response.data.self) {
+                    node._init(response.data);
+                    fulfill(node);
+                } else {
+                    fail(new neo4j.exceptions.InvalidDataException());
+                }
             }, fail);
         });
     },
