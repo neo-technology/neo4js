@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.neo4j.drivers</groupId>
 	<artifactId>neo4js</artifactId>
-	<version>0.5</version>
+	<version>0.6-SNAPSHOT</version>
 	<name>Neo4j - JavaScript REST Client</name>
 	<description>JavaScript API for the Neo4j REST data and management endpoints.</description>
 	<packaging>jar</packaging>
