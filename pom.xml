@@ -123,6 +123,7 @@
 								<include>neo4j/models/PropertyContainer-min.js</include>
 								<include>neo4j/models/Node-min.js</include>
 								<include>neo4j/models/Relationship-min.js</include>
+								<include>neo4j/models/Path-min.js</include>
 
 								<include>neo4j/services/BackupService-min.js</include>
 								<include>neo4j/services/ConfigService-min.js</include>

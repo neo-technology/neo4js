@@ -24,15 +24,11 @@
  * Example:
  * 
  * <pre>
- * var db = new neo4j.GraphDatabase(&quot;http://localhost:9999/&quot;,
- *         &quot;http://localhost:9988/&quot;);
+ * var db = new neo4j.GraphDatabase(&quot;http://localhost:9999/&quot;);
  * </pre>
  * 
  * @class
- * @param url
- *            the url to the REST server
- * @param manageUrl
- *            the url to the Management endpoint
+ * @param url the url to the neo4j server
  * @returns a new GraphDatabase instance
  */
 neo4j.GraphDatabase = function(url, webClient)

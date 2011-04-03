@@ -39,6 +39,12 @@ neo4j.models.Node.IN = "in";
 neo4j.models.Node.OUT = "out";
 neo4j.models.Node.ALL = "all";
 
+// Defined here until we break out a proper traversal subsystem
+neo4j.traverse = {};
+neo4j.traverse.RETURN_NODES = "node";
+neo4j.traverse.RETURN_RELATIONSHIPS = "relationship";
+neo4j.traverse.RETURN_PATHS = "path";
+
 _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
 {
 
@@ -137,6 +143,43 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
             throw new Error("You can't get the create relationship url until you have saved the node!");
         }
     },
+
+    /**
+     * Perform a traversal starting from this node.
+     * @param traversal should be a map conforming to http://components.neo4j.org/neo4j-server/snapshot/rest.html#Traverse
+     * @param returnType (optional) One of:
+     *                   neo4j.traverse.RETURN_NODES (default)
+     *                   neo4j.traverse.RETURN_RELATIONSHIPS
+     *                   neo4j.traverse.RETURN_PATHS
+     * @return A promise for an array of whatever type you asked for.
+     */
+    traverse : function(traversal, returnType) {
+        returnType = returnType || neo4j.traverse.RETURN_NODES
+        var url = this.db.web.replace(this._urls['traverse'], {'returnType' : returnType}),
+            node = this,
+            modelClass;
+
+        switch(returnType) {
+          case neo4j.traverse.RETURN_RELATIONSHIPS:
+            modelClass = neo4j.models.Relationship;
+            break;
+          case neo4j.traverse.RETURN_PATHS:
+            modelClass = neo4j.models.Path;
+            break;
+          default:
+            modelClass = neo4j.models.Node;
+            break;
+        }
+
+        return new neo4j.Promise(function(fulfill, fail) {
+            node.db.web.post(url, traversal).then(function(response) {
+                var instances = _.map( response.data, function(r) { 
+                    return new modelClass(r, node.db);
+                });
+                fulfill(instances);
+            }, fail);
+        });
+    },
     
     /**
      * Get relationships in some given direction for this node.
@@ -198,6 +241,7 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
         
         this._urls = {
             'properties' : definition.properties || "",
+            'traverse' : definition.traverse || "",
             'create_relationship' : definition.create_relationship || "",
             'all_relationships' : definition.all_relationships || "",
             'all_typed_relationships' : definition.all_typed_relationships || "",
