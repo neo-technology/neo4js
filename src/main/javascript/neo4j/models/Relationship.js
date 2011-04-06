@@ -58,17 +58,23 @@ _.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.pro
                     type: rel.getType(), 
                     data: rel.getProperties()});
                
-                req.then(
-                function(response) {
+                req.then(function(response) {
                     rel._init(response.data);
                     fulfill(rel);
                 }, function(response) {
-                    if(response.error && response.error.data && response.error.data.message && response.error.data.message.indexOf(rel._endUrl) > -1) {
-                        // Target node does not exist.
-                        fail(new neo4j.exceptions.NotFoundException(rel._endUrl));
-                    } else {
-                        fail(response);
-                    }
+                    if(response.error 
+                       && response.error.data 
+                       && response.error.data.exception) { 
+                       var ex = response.error.data.exception;
+                       if(ex.indexOf("EndNodeNotFoundException") > -1 
+                          || (ex.indexOf("BadInputException") > -1 && ex.indexOf(rel._endUrl) > -1) ) {
+                         return fail(new neo4j.exceptions.NotFoundException(rel._endUrl));
+                       } else if (ex.indexOf("StartNodeSameAsEndNodeException") > -1) {
+                         return fail(new neo4j.exceptions.StartNodeSameAsEndNodeException(rel._endUrl));
+                       }
+                    } 
+                    
+                    fail(response);
                 });
             });
         } else

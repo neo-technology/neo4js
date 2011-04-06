@@ -97,7 +97,9 @@ _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
                 } else {
                     fail(new neo4j.exceptions.InvalidDataException());
                 }
-            }, fail);
+            }, function(err) {
+                fail(new neo4j.exceptions.NotFoundException(node._self));
+            });
         });
     },
     

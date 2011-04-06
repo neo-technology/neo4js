@@ -19,12 +19,12 @@
  */
 
 /**
- * Triggered when a node or relationship cannot be found.
+ * Triggered when creating self-relationships.
  */
-neo4j.exceptions.NotFoundException = function(url) {
-    Error.call(this, "The object at url " + url + " does not exist.");
+neo4j.exceptions.StartNodeSameAsEndNodeException = function(url) {
+    Error.call(this, "You cannot create a relationship with the same start and end node.");
     this.url = url;
 };
 
-neo4j.exceptions.NotFoundException.prototype = new Error();
+neo4j.exceptions.StartNodeSameAsEndNodeException.prototype = new Error();
 
