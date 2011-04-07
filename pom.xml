@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.neo4j</groupId>
 		<artifactId>parent-pom</artifactId>
-		<version>18</version>
+		<version>19</version>
 	</parent>
 
 	<scm>
@@ -27,6 +27,7 @@
 		<js.testdir>${basedir}/src/test/javascript</js.testdir>
 		<js.webtestdir>${basedir}/src/webtest/javascript</js.webtestdir>
 		<js.outputfile>neo4js.js</js.outputfile>
+    <license-text.header>GPL-3-header.txt</license-text.header>
 	</properties>
 
 	<build>
