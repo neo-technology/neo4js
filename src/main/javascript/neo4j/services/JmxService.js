@@ -94,10 +94,11 @@ neo4j.services.JmxService.prototype.getBean = neo4j.Service.resourceFactory({
     'before' : function(method, args) {
         if (args[0] === "neo4j")
         {
-            var me = this;
+            var me = this,
+                name = args[1],
+                callback = args[2];
             this.kernelInstance(function(instanceName) {
-                args[0] = "org.neo4j";
-                args[1] = escape(instanceName + ",name=" + args[1]);
+                var args = ["org.neo4j", escape(instanceName + ",name=" + name), callback];
                 method.apply(this, args);
             });
         } else
