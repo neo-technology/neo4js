@@ -27,7 +27,7 @@
  * not initialized, it is assumed that this service is not available.
  * 
  * @class parent class that provides common items for services, such as a http
- *        interface
+ *        interface.
  */
 neo4j.Service = function(db) {
 	
