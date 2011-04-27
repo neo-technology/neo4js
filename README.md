@@ -1,20 +1,25 @@
-Neo4j REST client for JavaScript
+Neo4j server client for JavaScript
 =================================
 
-The beginnings of a neo4j REST client for client-side javascript.
+The beginnings of a neo4j server client for client-side javascript.
+
+Quick example
+-------------
 
 Neo4js makes heavy use of promises (also known as futures), methods that make calls to the database usually return a promise
 for a result of some kind.
 
 For instance:
 
-    var nodePromise = graph.node(0);
+    var nodePromise = graph.node("http://localhost:75);
     nodePromise.then(function(node) {
         // Do something with the node.
     });
 
-Quick example
--------------
+    // Or just
+    graph.node(0).
+
+Example usage:
     
     var graph = new neo4j.GraphDatabase("http://localhost:7474");
     

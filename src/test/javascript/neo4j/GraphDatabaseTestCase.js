@@ -243,6 +243,48 @@ _.extend(GraphDatabaseTest.prototype, {
         this.assertEquals("Node should have properties provided by server.", "Bob", result.node.getProperty("name"));
     },
     
+    testGetNodeById : function() {
+        var nodeUrl = "http://localhost:7474/db/data/node/1";
+    
+        clearWebmock();
+        mockServiceDefinition();
+        
+        webmock("GET", nodeUrl, {
+          "outgoing_relationships" : "http://localhost:7474/db/data/node/1/relationships/out",
+          "data" : {
+          "name" : "Bob"
+          },
+          "traverse" : "http://localhost:7474/db/data/node/1/traverse/{returnType}",
+          "all_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/all/{-list|&|types}",
+          "property" : "http://localhost:7474/db/data/node/1/properties/{key}",
+          "self" : nodeUrl,
+          "properties" : "http://localhost:7474/db/data/node/1/properties",
+          "outgoing_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/out/{-list|&|types}",
+          "incoming_relationships" : "http://localhost:7474/db/data/node/1/relationships/in",
+          "extensions" : {
+          },
+          "create_relationship" : "http://localhost:7474/db/data/node/1/relationships",
+          "all_relationships" : "http://localhost:7474/db/data/node/1/relationships/all",
+          "incoming_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/in/{-list|&|types}"
+        });
+        
+        var db = mockedGraphDatabase(),
+            result = {};
+        
+        var nodePromise = db.node(1);
+        
+        nodePromise.then(function(node){
+            result.node = node;
+        });
+        
+        this.assertTrue("GraphDatabase#node method call should return a promise.", nodePromise instanceof neo4j.Promise);
+        this.assertTrue("Promise should deliver a result.", typeof(result.node) != "undefined");
+        this.assertTrue("Promise should be fulfilled, and deliver a node.", result.node instanceof neo4j.models.Node);
+        
+        this.assertEquals("Node url should be as expected.", nodeUrl, result.node.getSelf());
+        this.assertEquals("Node should have properties provided by server.", "Bob", result.node.getProperty("name"));
+    },
+    
     testGetRelationship : function() {
     
         clearWebmock();
@@ -265,6 +307,38 @@ _.extend(GraphDatabaseTest.prototype, {
             result = {};
         
         var relPromise = db.rel("http://localhost:7474/db/data/relationship/1");
+        
+        relPromise.then(function(obj){
+            result.rel = obj;
+        });
+        
+        this.assertTrue("GraphDatabase#getRelationship method call should return a promise.", relPromise instanceof neo4j.Promise);
+        this.assertTrue("Relationship promise should deliver a result.", typeof(result.rel) != "undefined");
+        this.assertTrue("Relationship promise should be fulfilled, and deliver a relationship.", result.rel instanceof neo4j.models.Relationship);
+    },
+    
+    testGetRelationshipById : function() {
+        
+        clearWebmock();
+        mockServiceDefinition();
+        
+        webmock("GET", "http://localhost:7474/db/data/relationship/1", {
+            "start" : "http://localhost:7474/db/data/node/0",
+            "data" : {
+            },
+            "self" : "http://localhost:7474/db/data/relationship/1",
+            "property" : "http://localhost:7474/db/data/relationship/1/properties/{key}",
+            "properties" : "http://localhost:7474/db/data/relationship/1/properties",
+            "type" : "KNOWS",
+            "extensions" : {
+            },
+            "end" : "http://localhost:7474/db/data/node/1"
+          });
+        
+        var db = mockedGraphDatabase(),
+            result = {};
+        
+        var relPromise = db.rel(1);
         
         relPromise.then(function(obj){
             result.rel = obj;
@@ -596,7 +670,7 @@ _.extend(GraphDatabaseTest.prototype, {
         clearWebmock();
         mockServiceDefinition();
         
-        webmock("GET", "/db/data/", {
+        webmock("GET", "http://localhost:7474/db/data/", {
             "relationship_index" : "http://localhost:7474/db/data/index/relationship",
             "relationship_types" : "http://localhost:7474/db/data/relationships/types",
             "node" : "http://localhost:7474/db/data/node",

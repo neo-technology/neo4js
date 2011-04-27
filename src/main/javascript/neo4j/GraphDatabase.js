@@ -110,11 +110,14 @@ _.extend(neo4j.GraphDatabase.prototype, {
                 } else
                 {
                     // Fetch a node
-                    var node = new neo4j.models.Node({ self : arg }, db);
-                    node.fetch().then(function(fetchedNode) {
-                        fulfill(fetchedNode);
-                    }, function(){
-                        fail(new neo4j.exceptions.NotFoundException(arg));
+                    var urlPromise = db.promiseNodeOrNodeUrl(arg);
+                    urlPromise.then(function(url) {
+                        var node = new neo4j.models.Node({ self : url }, db);
+                        node.fetch().then(function(fetchedNode) {
+                            fulfill(fetchedNode);
+                        }, function(){
+                            fail(new neo4j.exceptions.NotFoundException(url));
+                        });
                     });
                 }
             });
@@ -141,21 +144,22 @@ _.extend(neo4j.GraphDatabase.prototype, {
         var db = this;
         if( typeof(type) == "undefined" ) {
             // Fetch relationship
-            var urlPromise = neo4j.Promise.wrap(fromNode);
+            var urlPromise = this.promiseRelationshipOrRelationshipUrl(fromNode);
+            
             return urlPromise.then(function(url, fulfill, fail){
-               var relationship = new neo4j.models.Relationship({self:url}, db);
-               relationship.fetch().then(function(fetchedRelationship) {
-                  fulfill(fetchedRelationship); 
-               }, function() {
-                   fail(new neo4j.exceptions.NotFoundException(url));
-               });
+                var relationship = new neo4j.models.Relationship({self:url}, db);
+                relationship.fetch().then(function(fetchedRelationship) {
+                   fulfill(fetchedRelationship); 
+                }, function() {
+                    fail(new neo4j.exceptions.NotFoundException(url));
+                });
             });
         } else {
             // Create relationship
             var dataPromise = neo4j.Promise.wrap(data || {}),
                 typePromise = neo4j.Promise.wrap(type),
-                fromNodePromise = neo4j.Promise.wrap(fromNode),
-                toNodePromise = neo4j.Promise.wrap(toNode);
+                fromNodePromise = this.promiseNodeOrNodeUrl(fromNode),
+                toNodePromise = this.promiseNodeOrNodeUrl(toNode);
             
             var all = neo4j.Promise.join(fromNodePromise, toNodePromise, typePromise, dataPromise);
             return all.then(function(results, fulfill, fail)  {
@@ -232,6 +236,17 @@ _.extend(neo4j.GraphDatabase.prototype, {
         return this.getServiceDefinition().then(function(def, fulfill) {
             if(/^[0-9]+$/i.test(id)) {
                 fulfill(def.node+"/"+id);
+            } else {
+                fulfill(id);
+            }
+        });
+    },
+
+    relUri : function(id) {
+        return this.getDiscoveryDocument().then(function(urls, fulfill){
+            if(/^[0-9]+$/i.test(id)) {
+                // There is currently no way to discover relationship url
+                fulfill(urls['data'] + "relationship/" + id);
             } else {
                 fulfill(id);
             }
@@ -384,17 +399,39 @@ _.extend(neo4j.GraphDatabase.prototype, {
             fulfill(url.indexOf(urls['node']) === 0);
         });
     },
+    
+    promiseNodeOrNodeUrl : function(unknown) {
+        if(typeof(unknown) === "object" || this.isUrl(unknown)) {
+            return neo4j.Promise.wrap(unknown);
+        } else {
+            return this.nodeUri(unknown);
+        }
+    },
+    
+    promiseRelationshipOrRelationshipUrl : function(unknown) {
+        if(typeof(unknown) === "object" || this.isUrl(unknown)) {
+            return neo4j.Promise.wrap(unknown);
+        } else {
+            return this.relUri(unknown); 
+        }
+    },
+    
+    /**
+     * Naive check to see if input contains ://
+     */
+    isUrl : function(variableToCheck) {
+        if(typeof(variableToCheck) === "object") return false;
+        
+        variableToCheck += "";
+        return variableToCheck.indexOf("://") !== -1;
+    },
 
     /**
      * Serialize this {@link GraphDatabase} instance.
      */
     toJSONString : function()
     {
-
-        return {
-            url : this.url,
-            manageUrl : this.manageUrl };
-
+        return { url : this.url };
     },
     
     /**

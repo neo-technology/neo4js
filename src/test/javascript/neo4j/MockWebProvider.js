@@ -48,11 +48,11 @@ var mockWebProvider = {
     mockServiceDefinition : function() {
     
         webmock("GET", "http://localhost/", {
-           "data":"/db/data/",
-           "management": "/db/manage/"
+          "data" : "http://localhost:7474/db/data/",
+          "management" : "http://localhost:7474/db/manage/"
         });
     
-    	webmock("GET", "/db/data/", {
+    	webmock("GET", "http://localhost:7474/db/data/", {
 		  "relationship_index" : "http://localhost:7474/db/data/index/relationship",
 		  "relationship_types" : "http://localhost:7474/db/data/relationships/types",
 		  "node" : "http://localhost:7474/db/data/node",
@@ -62,7 +62,7 @@ var mockWebProvider = {
 		  "extensions" : {
 		  }
 		});
-        webmock("GET", "/db/manage/", {
+        webmock("GET", "http://localhost:7474/db/manage/", {
 		  "services" : {
 		    "console" : "http://localhost:7474/db/manage/server/console",
 		    "jmx" : "http://localhost:7474/db/manage/server/jmx",
