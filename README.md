@@ -3,14 +3,51 @@ Neo4j REST client for JavaScript
 
 The beginnings of a neo4j REST client for client-side javascript.
 
-Quickstart
-------------
-    
-Build production version
+Neo4js makes heavy use of promises (also known as futures), methods that make calls to the database usually return a promise
+for a result of some kind.
 
-	git clone http://github.com/jakewins/neo4js.git
-	cd neo4js
-	mvn package
+For instance:
+
+    var nodePromise = graph.node(0);
+    nodePromise.then(function(node) {
+        // Do something with the node.
+    });
+
+Quick example
+-------------
+    
+    var graph = new neo4j.GraphDatabase("http://localhost:7474");
+    
+    var lisaPromise = graph.node({ "name" : "Lisa" });
+    var bobPromise = graph.node({ "name" : "Bob" });
+    
+    var lovePromise = graph.rel(lisaPromise, "LOVES", bobPromise, { "reason" : "All the bling he got." });
+
+    // Wait for the promise of a relationship to be fulfilled.
+    lovePromise.then(function(relationship) {
+
+      // Get the end node of the LOVES relationship
+      relationship.getEndNode().then(function(bob) {
+
+        // Once you have a node or relationship object, all properties are immediately available:
+        var name = bob.getProperty("name");
+
+        // Change a property like this
+        bob.setProperty("name", "Steven");
+        bob.save().then(function(steven) {
+          // Bob is now saved.
+        });
+
+      });
+
+    });
+
+Build production version
+------------
+
+    git clone http://github.com/jakewins/neo4js.git
+    cd neo4js
+    mvn package
 	
 This will create target/classes/neo4js.js
 
