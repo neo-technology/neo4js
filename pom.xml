@@ -135,6 +135,11 @@
 								<include>neo4j/services/JmxService-min.js</include>
 								<include>neo4j/services/LifecycleService-min.js</include>
 								<include>neo4j/services/MonitorService-min.js</include>
+								
+								<include>neo4j/index/Index-min.js</include>
+								<include>neo4j/index/NodeIndex-min.js</include>
+								<include>neo4j/index/RelationshipIndex-min.js</include>
+								<include>neo4j/index/Indexes-min.js</include>
 
 								<include>neo4j/GraphDatabaseManager-min.js</include>
 								<include>neo4j/GraphDatabase-min.js</include>
