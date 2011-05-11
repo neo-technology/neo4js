@@ -67,6 +67,11 @@ neo4j.GraphDatabase = function(url, webClient)
     this.trigger = neo4j.proxy(this.events.trigger, this.events);
 
     /**
+     * Indexes, instance of {@link neo4j.index.Indexes}.
+     */
+    this.index = new neo4j.index.Indexes(this);
+    
+    /**
      * Manager, instance of {@link neo4j.GraphDatabaseManager}.
      */
     this.manage = new neo4j.GraphDatabaseManager(this);
