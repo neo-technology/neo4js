@@ -41,6 +41,17 @@ neo4j.index.Index = function(db, name)
 
 _.extend(neo4j.index.Index.prototype, {
 
+    getUriFor : function(item) { return ""; }, // To be implemented by subclasses
+    getObjectFor : function(itemOrUri) { return ""; }, // To be implemented by subclasses
+    getType : function() { return ""; },       // To be implemented by subclasses
+    createObjectFromDefinition : function(def) {},
+    
+    getIdFor : function(itemPromise) { 
+        return itemPromise.then(function(item, fulfill) {
+            fulfill(item.getId());
+        }); 
+    },
+    
     /**
      * Perform an index query. How to write the query depends on what index
      * provider you are using, which you (on purpose or indirectly) decided when you created your index. 
@@ -53,25 +64,67 @@ _.extend(neo4j.index.Index.prototype, {
      * @return A list of nodes or relationships, depending on index type.
      */
     query : function(query) {
-        
+        var index = this;
+        return this.db.getServiceDefinition().then(function(urls, fulfill, fail) {
+            index.db.web.get(urls[index.getType()] + "/" + index.name, {query:query}, function(result) {
+                var out = [];
+                for(var i=0,l=result.length; i<l; i++) {
+                    out.push(index.createObjectFromDefinition(result[i]));
+                }
+                fulfill(out);
+            }, fail);
+        });
     },
 
     /**
      * Look for exact matches on the given key/value pair.
      */
     exactQuery : function(key, value) {
-    
+        var index = this;
+        return this.db.getServiceDefinition().then(function(urls, fulfill, fail) {
+            index.db.web.get(urls[index.getType()] + "/" + index.name + "/" + key + "/" + value, function(result) {
+                var out = [];
+                for(var i=0,l=result.length; i<l; i++) {
+                    out.push(index.createObjectFromDefinition(result[i]));
+                }
+                fulfill(out);
+            }, fail);
+        });
     },
     
     /**
      * Index a node or a relationship, depending on index type.
      * 
      * @param item An id, url or an instance of node or relationship, depending on the index type.
-     * @param key The key to index the value with.
-     * @param value The value to be indexed.
+     * @param key The key to index the value with. (used when searching later on)
+     * @param value (optional) The value to be indexed, defaults to the items value of the key property.
      */
     index : function(item, key, value) {
+        var itemPromise = neo4j.Promise.wrap(item),
+            keyPromise = neo4j.Promise.wrap(key),
+            urlPromise = this.getUriFor(itemPromise),
+            urlsPromise = this.db.getServiceDefinition(),
+            index = this;
         
+        if(typeof(value) === "undefined") {
+            var valuePromise = this.getObjectFor(itemPromise).then(function(obj, fulfill){
+                fulfill(obj.getProperty(key));
+            });
+        } else {
+            var valuePromise = neo4j.Promise.wrap(value);
+        }
+        
+        var allPromises = neo4j.Promise.join.apply(this, [urlPromise, keyPromise, valuePromise, urlsPromise]);
+        return allPromises.then(function(values, fulfill, fail) {
+            var url = values[0],
+                key = values[1],
+                value = values[2],
+                urls = values[3];
+            
+            index.db.web.post(urls[index.getType()] + "/" + index.name + "/" + key + "/" + value, url, function(result) {
+                fulfill(true);
+            }, fail);
+        });
     },
     
     /**
@@ -82,7 +135,29 @@ _.extend(neo4j.index.Index.prototype, {
      * @param value (Optional) Allowed if key is provided, only remove the item from index entries with the given key and this value. 
      */
     unindex : function(item, key, value) {
-    
+        var itemPromise = neo4j.Promise.wrap(item),
+            idPromise = this.getIdFor(itemPromise),
+            urlsPromise = this.db.getServiceDefinition(),
+            index = this;
+        
+        var allPromises = neo4j.Promise.join.apply(this, [idPromise, urlsPromise]);
+        return allPromises.then(function(values, fulfill, fail) {
+            var id = values[0],
+                urls = values[1];
+            
+            var url = urls[index.getType()] + "/" + index.name;
+            if(key) {
+                url += "/" + key;
+            }
+            if(value) {
+                url+= "/" + value;
+            }
+            url += "/" + id;
+            
+            index.db.web.del(url, function(result) {
+                fulfill(true);
+            }, fail);
+        });
     }
 
 });

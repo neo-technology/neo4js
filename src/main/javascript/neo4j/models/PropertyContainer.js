@@ -41,6 +41,15 @@ _.extend(neo4j.models.PropertyContainer.prototype, {
     },
     
     /**
+     * Get the numeric id for this object. Returns null if
+     * the object is not yet saved.
+     */
+    getId : function() {
+        var url = this.getSelf();
+        return url == null ? null : url.substr(url.lastIndexOf("/")+1);
+    },
+    
+    /**
      * @return true if this object has a url.
      */
     exists : function() {

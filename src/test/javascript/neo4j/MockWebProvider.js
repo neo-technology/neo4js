@@ -102,7 +102,7 @@ var mockWebProvider = {
                 args.success(mocker);
             }
         } else {
-            args.failure(null);
+            throw new Error("No such endpoint defined: " + args.method + " - " + args.url);
         }
     }
 

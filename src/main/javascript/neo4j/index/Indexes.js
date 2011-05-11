@@ -31,28 +31,94 @@ neo4j.index.Indexes = function(db)
      */
     this.db = db;
     
+    this._cache = {};
+    
     _.bindAll(this, 'getNodeIndex',    'getRelationshipIndex',
-                    'createNodeIndex', 'createRelationshipIndex');
-                    //'removeNodeIndex', 'removeRelationshipIndex'); // Not implemented in server yet
+                    'createNodeIndex', 'createRelationshipIndex',
+                    'removeNodeIndex', 'removeRelationshipIndex');
 
 };
 
 _.extend(neo4j.index.Indexes.prototype, {
 
-    getNodeIndex : function(key) {
-        
+    getAllNodeIndexes : function() {
+        return this._listAllIndexes("node_index");
     },
 
-    getRelationshipIndex : function(key) {
-    
+    getAllRelationshipIndexes : function() {
+        return this._listAllIndexes("relationship_index");
     },
     
-    createNodeIndex : function(key) {
-    
+    getNodeIndex : function(name) {
+        return this._getOrCreateLocalIndexObject("node_index", name);
+    },
+
+    getRelationshipIndex : function(name) {
+        return this._getOrCreateLocalIndexObject("relationship_index", name);
     },
     
-    createRelationshipIndex : function(key) {
+    createNodeIndex : function(name, config) {
+        return this._createIndex("node_index", name, config);  
+    },
     
+    createRelationshipIndex : function(name, config) {
+        return this._createIndex("relationship_index", name, config);
+    },
+    
+    removeNodeIndex : function(name) {
+        return this._removeIndex("node_index", name);
+    },
+    
+    removeRelationshipIndex : function(name) {
+        return this._removeIndex("relationship_index", name);
+    },
+    
+    _listAllIndexes : function(type) {
+        var db = this.db,
+            indexes = this;
+        return this.db.getServiceDefinition().then(function(urls, fulfill, fail){
+            db.web.get(urls[type], function(indexMap) {
+                var indexList = [],
+                    indexNames = _(indexMap).keys();
+                for(var i=0,l=indexNames.length;i<l;i++) {
+                    indexList.push(indexes._getOrCreateLocalIndexObject(type, indexNames[i]));
+                }
+                fulfill(indexList);
+            }, fail);
+        });
+    },
+    
+    _createIndex : function(type, name, config) {
+        var config = config || {},
+            db = this.db,
+            indexes = this;
+        return this.db.getServiceDefinition().then(function(urls, fulfill, fail){
+            db.web.post(urls[type], { name : name, config : config }, function(data) {
+                fulfill(indexes._getOrCreateLocalIndexObject(type, name));
+            }, fail);
+        });
+    },
+    
+    _removeIndex : function(type, name) {
+        var db = this.db;
+        return this.db.getServiceDefinition().then(function(urls, fulfill, fail){
+            db.web.del(urls[type] + "/" + name, fulfill, fail);
+        });
+    },
+    
+    _getOrCreateLocalIndexObject : function(type, name) {
+        if(typeof(this._cache[type]) == "undefined") {
+            this._cache[type] = {};
+        }
+        if(typeof(this._cache[type][name]) == "undefined") {
+            if(type === "relationship_index") {
+                var instance = new neo4j.index.RelationshipIndex(this.db, name);
+            } else {
+                var instance = new neo4j.index.NodeIndex(this.db, name);
+            }
+            this._cache[type][name] = instance; 
+        }
+        return this._cache[type][name];
     }
 
 });

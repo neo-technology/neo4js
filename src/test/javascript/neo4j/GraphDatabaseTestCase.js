@@ -680,9 +680,6 @@ _.extend(GraphDatabaseTest.prototype, {
             }
         });
         
-        db.getNodeIndex("my_nodes").query("name", "bob")
-        db.getNodeIndex("my_nodes").exactMatch("name", "bob")
-        
         var db = mockedGraphDatabase(),
             result = {};
         

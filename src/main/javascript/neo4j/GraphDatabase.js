@@ -233,6 +233,10 @@ _.extend(neo4j.GraphDatabase.prototype, {
     },
     
     nodeUri : function(id) {
+        if(typeof(id.getSelf) != "undefined") {
+            return neo4j.Promise.wrap(id.getSelf());
+        }
+        
         return this.getServiceDefinition().then(function(def, fulfill) {
             if(/^[0-9]+$/i.test(id)) {
                 fulfill(def.node+"/"+id);
@@ -243,6 +247,10 @@ _.extend(neo4j.GraphDatabase.prototype, {
     },
 
     relUri : function(id) {
+        if(typeof(id.getSelf) != "undefined") {
+            return neo4j.Promise.wrap(id.getSelf());
+        }
+        
         return this.getDiscoveryDocument().then(function(urls, fulfill){
             if(/^[0-9]+$/i.test(id)) {
                 // There is currently no way to discover relationship url

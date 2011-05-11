@@ -17,3 +17,49 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/**
+ * A relationship index.
+ * 
+ * @param db Should be a GraphDatabase instance.
+ * @param name Should be the index name
+ */
+neo4j.index.RelationshipIndex = function(db, name)
+{
+
+    neo4j.index.Index.call(this, db, name);
+
+};
+
+_.extend(neo4j.index.RelationshipIndex.prototype, neo4j.index.Index.prototype, {
+
+    getType : function() {
+        return "relationship_index";
+    },
+    
+    getUriFor : function(itemPromise) {
+        var db = this.db;
+        return itemPromise.then(function(item, fulfill) {
+            db.relUri(item).then(fulfill);  
+        });
+    },
+    
+    getObjectFor : function(unknownPromise) {
+        var db = this.db;
+        return unknownPromise.then(function(unknown, fulfill) {
+            if(typeof(unknown.getSelf) != "undefined") {
+                fulfill(unknown);
+            } else {
+                db.rel(unknown).then(function(rel) {
+                   fulfill(rel); 
+                });
+            }  
+        });
+    },
+    
+    createObjectFromDefinition : function(def) {
+        return new neo4j.models.Relationship(def, this.db);
+    }
+
+
+});
