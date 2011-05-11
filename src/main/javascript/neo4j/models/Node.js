@@ -21,6 +21,8 @@
 /**
  * Represents a database node.
  * 
+ * @class
+ * @extends neo4j.models.PropertyContainer
  * @param arg
  *            Is either a node url or, to create a new node, a map.
  */
@@ -47,7 +49,9 @@ neo4j.traverse.RETURN_RELATIONSHIPS = "relationship";
 neo4j.traverse.RETURN_PATHS = "path";
 
 _.extend(neo4j.models.Node.prototype, neo4j.models.PropertyContainer.prototype,
-{
+
+    /** @lends neo4j.models.Node# */        
+    {
 
     /**
      * Save this node. Creates the node if it does not have a url.

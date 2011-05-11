@@ -21,6 +21,7 @@
 /**
  * Abstract parent class for NodeIndex and RelationshipIndex.
  * 
+ * @class
  * @param db Should be a GraphDatabase instance.
  * @param name Should be the index name
  */
@@ -32,6 +33,9 @@ neo4j.index.Index = function(db, name)
      */
     this.db = db;
     
+    /**
+     * The name of this index.
+     */
     this.name = name;
     
     _.bindAll(this, 'query', 'exactQuery',
@@ -39,7 +43,10 @@ neo4j.index.Index = function(db, name)
 
 };
 
-_.extend(neo4j.index.Index.prototype, {
+_.extend(neo4j.index.Index.prototype,
+        
+    /** @lends neo4j.index.Index# */          
+    {
 
     getUriFor : function(item) { return ""; }, // To be implemented by subclasses
     getObjectFor : function(itemOrUri) { return ""; }, // To be implemented by subclasses

@@ -85,7 +85,9 @@ neo4j.GraphDatabase = function(url, webClient)
 
 };
 
-_.extend(neo4j.GraphDatabase.prototype, {
+_.extend(neo4j.GraphDatabase.prototype, 
+    /** @lends neo4j.GraphDatabase# */    
+    {
 
     /**
      * Used to manipulate nodes.

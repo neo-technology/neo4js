@@ -21,6 +21,7 @@
 /**
  * Handles node and relationship indexes.
  * 
+ * @class
  * @param db Should be a GraphDatabase instance.
  */
 neo4j.index.Indexes = function(db)
@@ -40,7 +41,7 @@ neo4j.index.Indexes = function(db)
 };
 
 _.extend(neo4j.index.Indexes.prototype, {
-
+    /** @lends neo4j.index.Indexes# */
     getAllNodeIndexes : function() {
         return this._listAllIndexes("node_index");
     },

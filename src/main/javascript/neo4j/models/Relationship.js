@@ -21,6 +21,10 @@
 /**
  * Represents a database relationship.
  * 
+ * 
+ * @class
+ * @extends neo4j.models.PropertyContainer
+ * 
  * @param arg Should be an object matching that returned by neo4j server
  * when fetching or creating relationships. If you are fetching a relationship,
  * only the "self" parameter is required. Call #fetch() to load the rest of the
@@ -41,7 +45,10 @@ neo4j.models.Relationship = function(arg, db) {
 	
 };
 
-_.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.prototype, {
+_.extend(neo4j.models.Relationship.prototype, neo4j.models.PropertyContainer.prototype, 
+
+    /** @lends neo4j.models.Relationship# */       
+    {
 	
     /**
      * Save this relationship. Creates the relationship if it does not have a url.

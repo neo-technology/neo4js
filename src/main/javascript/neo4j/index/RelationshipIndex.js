@@ -21,6 +21,8 @@
 /**
  * A relationship index.
  * 
+ * @class
+ * @extends neo4j.index.Index
  * @param db Should be a GraphDatabase instance.
  * @param name Should be the index name
  */
@@ -31,12 +33,19 @@ neo4j.index.RelationshipIndex = function(db, name)
 
 };
 
-_.extend(neo4j.index.RelationshipIndex.prototype, neo4j.index.Index.prototype, {
-
+_.extend(neo4j.index.RelationshipIndex.prototype, neo4j.index.Index.prototype, 
+    /** @lends neo4j.index.RelationshipIndex# */ 
+    {
+    /**
+     * @private
+     */
     getType : function() {
         return "relationship_index";
     },
     
+    /**
+     * @private
+     */
     getUriFor : function(itemPromise) {
         var db = this.db;
         return itemPromise.then(function(item, fulfill) {
@@ -44,6 +53,9 @@ _.extend(neo4j.index.RelationshipIndex.prototype, neo4j.index.Index.prototype, {
         });
     },
     
+    /**
+     * @private
+     */
     getObjectFor : function(unknownPromise) {
         var db = this.db;
         return unknownPromise.then(function(unknown, fulfill) {
@@ -57,6 +69,9 @@ _.extend(neo4j.index.RelationshipIndex.prototype, neo4j.index.Index.prototype, {
         });
     },
     
+    /**
+     * @private
+     */
     createObjectFromDefinition : function(def) {
         return new neo4j.models.Relationship(def, this.db);
     }
