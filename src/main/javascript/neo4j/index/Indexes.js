@@ -150,7 +150,7 @@ _.extend(neo4j.index.Indexes.prototype,
         return this.db.getServiceDefinition().then(function(urls, fulfill, fail){
             db.web.get(urls[type], function(indexMap) {
                 var indexList = [],
-                    indexNames = _(indexMap).keys();
+                    indexNames = indexMap === null ? [] : _(indexMap).keys();
                 for(var i=0,l=indexNames.length;i<l;i++) {
                     indexList.push(indexes._getOrCreateLocalIndexObject(type, indexNames[i]));
                 }
