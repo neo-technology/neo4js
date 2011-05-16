@@ -40,36 +40,106 @@ neo4j.index.Indexes = function(db)
 
 };
 
-_.extend(neo4j.index.Indexes.prototype, {
+_.extend(neo4j.index.Indexes.prototype,
     /** @lends neo4j.index.Indexes# */
+    {
+    
+    /**
+     * List all node indexes in the database.
+     * 
+     * Ex:
+     * 
+     * db.indexes.getAllNodeIndexes().then(function(indexes) {
+     *     // Use indexes.
+     * });
+     * 
+     * @return A promise object, promising a list of {@link neo4j.index.NodeIndex} instances.
+     */
     getAllNodeIndexes : function() {
         return this._listAllIndexes("node_index");
     },
 
+    
+    /**
+     * List all relationship indexes in the database.
+     * 
+     * Ex:
+     * 
+     * db.indexes.getAllNodeIndexes().then(function(indexes) {
+     *     // Use indexes.
+     * });
+     * 
+     * @return A promise object, promising a list of {@link neo4j.index.RelationshipIndex} instances.
+     */
     getAllRelationshipIndexes : function() {
         return this._listAllIndexes("relationship_index");
     },
     
+    /**
+     * Retrieve a single index by name. The index does not have
+     * to exist, it will be created the first time you insert something
+     * into it. You can, however, not query a non-existant index.
+     * 
+     * @param name Should be the name of the index.
+     * @return {@link neo4j.index.NodeIndex}
+     */
     getNodeIndex : function(name) {
         return this._getOrCreateLocalIndexObject("node_index", name);
     },
 
+    
+    /**
+     * Retrieve a single index by name. The index does not have
+     * to exist, it will be created the first time you insert something
+     * into it. You can, however, not query a non-existant index.
+     * 
+     * @param name Should be the name of the index.
+     * @return {@link neo4j.index.RelationshipIndex}
+     */
     getRelationshipIndex : function(name) {
         return this._getOrCreateLocalIndexObject("relationship_index", name);
     },
     
+    /**
+     * Create a new index.
+     * 
+     * @param name A unique index name.
+     * @param config Optional configuration map, see neo4j server REST documentation.
+     * @return A promise object, promising a {@link neo4j.index.NodeIndex}
+     */
     createNodeIndex : function(name, config) {
         return this._createIndex("node_index", name, config);  
     },
+
     
+    /**
+     * Create a new index.
+     * 
+     * @param name A unique index name.
+     * @param config Optional configuration map, see neo4j server REST documentation.
+     * @return A promise object, promising a {@link neo4j.index.RelationshipIndex}
+     */
     createRelationshipIndex : function(name, config) {
         return this._createIndex("relationship_index", name, config);
     },
     
+    /**
+     * Removes an index.
+     * 
+     * @param name Name of index to remove.
+     * @return A promise for the delete operation to complete.
+     */
     removeNodeIndex : function(name) {
         return this._removeIndex("node_index", name);
     },
+
     
+    /**
+     * Removes an index.
+     * 
+     * @param name Name of index to remove.
+     * @return A promise for the delete operation to complete.
+     */
     removeRelationshipIndex : function(name) {
         return this._removeIndex("relationship_index", name);
     },
