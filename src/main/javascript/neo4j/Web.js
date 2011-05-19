@@ -36,6 +36,7 @@ neo4j.jqueryWebProvider = {
             data = args.data,
             success = args.success,
             failure = args.failure,
+            isGetRequest = method === "GET",
             error = function(req) {
             try {
                 if (req.status === 200)
@@ -72,7 +73,7 @@ neo4j.jqueryWebProvider = {
                     if (data === null || data === "null")
                     {
                         data = "";
-                    } else
+                    } else if(!isGetRequest)
                     {
                         data = JSON.stringify(data);
                     }
@@ -96,7 +97,9 @@ neo4j.jqueryWebProvider = {
 	                                data : data,
 	                                timeout: timeout,
 	                                cache: false,
-	                                processData : false,
+	                                // Let jquery turn data map into query string
+	                                // only on GET requests.
+	                                processData : isGetRequest, 
 	                                success : function(data, status, xhr) {
 	                                	if ( xhr.status === 0 ) {
 	                                		error(xhr);
