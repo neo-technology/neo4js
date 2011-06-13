@@ -38,6 +38,17 @@ neo4j.index.Index = function(db, name)
      */
     this.name = name;
     
+    /**
+     * Configuration for this index, may be null
+     * if config has not been fetched.
+     */
+    this.config = null;
+    
+    /**
+     * Provider name
+     */
+    this.provider = "N/A";
+    
     _.bindAll(this, 'query', 'exactQuery',
                     'index', 'unindex');
 
@@ -57,6 +68,27 @@ _.extend(neo4j.index.Index.prototype,
         return itemPromise.then(function(item, fulfill) {
             fulfill(item.getId());
         }); 
+    },
+    
+    /**
+     * Internal method, does not update
+     * the actual configuration used in the DB.
+     */
+    setConfig : function(config) {
+        this.config = config;
+    },
+    
+    /**
+     * Check if configuration info has been downloaded
+     * for this index. Config info is automatically made
+     * available if you get indexes via the getAllXIndexes methods.
+     */
+    configAvailable : function() {
+        return this.config !== null;
+    },
+    
+    getConfig : function() {
+        return this.config;
     },
     
     /**

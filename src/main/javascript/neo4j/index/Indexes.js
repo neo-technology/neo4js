@@ -151,8 +151,9 @@ _.extend(neo4j.index.Indexes.prototype,
             db.web.get(urls[type], function(indexMap) {
                 var indexList = [],
                     indexNames = indexMap === null ? [] : _(indexMap).keys();
+
                 for(var i=0,l=indexNames.length;i<l;i++) {
-                    indexList.push(indexes._getOrCreateLocalIndexObject(type, indexNames[i]));
+                    indexList.push(indexes._getOrCreateLocalIndexObject(type, indexNames[i], indexMap[indexNames[i]]));
                 }
                 fulfill(indexList);
             }, fail);
@@ -160,12 +161,12 @@ _.extend(neo4j.index.Indexes.prototype,
     },
     
     _createIndex : function(type, name, config) {
-        var config = config || {},
+        var config = config || {provider:"lucene", type : "exact"},
             db = this.db,
             indexes = this;
         return this.db.getServiceDefinition().then(function(urls, fulfill, fail){
             db.web.post(urls[type], { name : name, config : config }, function(data) {
-                fulfill(indexes._getOrCreateLocalIndexObject(type, name));
+                fulfill(indexes._getOrCreateLocalIndexObject(type, name, config));
             }, fail);
         });
     },
@@ -177,10 +178,14 @@ _.extend(neo4j.index.Indexes.prototype,
         });
     },
     
-    _getOrCreateLocalIndexObject : function(type, name) {
+    _getOrCreateLocalIndexObject : function(type, name, config) {
+        
+        var config = config || null;
+        
         if(typeof(this._cache[type]) == "undefined") {
             this._cache[type] = {};
         }
+        
         if(typeof(this._cache[type][name]) == "undefined") {
             if(type === "relationship_index") {
                 var instance = new neo4j.index.RelationshipIndex(this.db, name);
@@ -189,6 +194,18 @@ _.extend(neo4j.index.Indexes.prototype,
             }
             this._cache[type][name] = instance; 
         }
+        
+        if(config != null) {
+            if(config['provider']) {
+                this._cache[type][name].provider = config['provider'];
+                delete(config['provider']);
+            }
+            if(config['template']) {
+                delete(config['template']);
+            }
+            this._cache[type][name].setConfig(config);
+        }
+        
         return this._cache[type][name];
     }
 

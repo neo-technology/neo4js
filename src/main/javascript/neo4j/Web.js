@@ -309,6 +309,9 @@ _.extend(neo4j.Web.prototype, {
     wrapFailureCallback : function(cb) {
     	return function(ex) {
     		if( typeof(ex) != "undefined" && ex instanceof neo4j.exceptions.ConnectionLostException ) {
+    			neo4j.events.trigger("web.connection_lost", _.toArray(arguments));
+    			
+    			// For backwards compatibility
     			neo4j.events.trigger("web.connection.failed", _.toArray(arguments));
     		}
 
