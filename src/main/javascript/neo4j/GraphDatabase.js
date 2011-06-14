@@ -57,7 +57,7 @@ neo4j.GraphDatabase = function(url, webClient)
      * Client used to perform http actions. Can be any object that implements
      * the same API as {@link neo4j.Web}.
      */
-    this.web = webClient || new neo4j.Web();
+    this.web = webClient || new neo4j.Web(null, this.events);
 
     /**
      * Convinience access to event trigger method.

@@ -36,15 +36,23 @@ neo4j.jqueryWebProvider = {
             data = args.data,
             success = args.success,
             failure = args.failure,
-            isGetRequest = method === "GET",
-            error = function(req) {
+            isGetRequest = method === "GET";
+        
+        function successHandler(data, status, xhr) {
+            if ( xhr.status === 0 ) {
+                errorHandler(xhr);
+            } else {
+                success.apply(this, arguments);
+            }
+        }
+        
+        function errorHandler(req) {
             try {
                 if (req.status === 200)
                 {
                     // This happens when the
                     // server returns an
-                    // empty
-                    // response.
+                    // empty response.
                     return success(null);
                 }
             } catch (e) {
@@ -54,67 +62,54 @@ neo4j.jqueryWebProvider = {
             try
             {
             	if( req.status === 0 ) {
-            	    failure( new neo4j.exceptions.ConnectionLostException() );
+            	    failure(new neo4j.exceptions.ConnectionLostException());
             	} else {
-                    var error = JSON
-                            .parse(req.responseText);
+                    var error = JSON.parse(req.responseText);
                     failure(new neo4j.exceptions.HttpException(req.status, error, req));
             	}
             } catch (e)
             {
                 failure(new neo4j.exceptions.HttpException(-1, {}, req));
             }
-	    };
+	    }
 
 	    var isCrossDomain = this.isCrossDomain;
-        setTimeout(
-                (function(method, url, data, success, failure) {
+        (function(method, url, data, success, failure) {
 
-                    if (data === null || data === "null")
-                    {
-                        data = "";
-                    } else if(!isGetRequest)
-                    {
-                        data = JSON.stringify(data);
-                    }
+            if (data === null || data === "null")
+            {
+                data = "";
+            } else if(!isGetRequest)
+            {
+                data = JSON.stringify(data);
+            }
 
-                    return function() {
-                        if (isCrossDomain(url)
-                                && window.XDomainRequest)
-                        {
-                            // IE8 Cross domain
-                            // TODO
-                            if (typeof (failure) === "function")
-                            {
-                                failure(new neo4j.exceptions.HttpException(-1, null, null, "Cross-domain requests are available in IE, but are not yet implemented in neo4js."));
-                            }
-                        } else
-                        {
-                        	var finished = false,
-                        	    xhr = $.ajax({
-	                                url : url,
-	                                type : method,
-	                                data : data,
-	                                timeout: timeout,
-	                                cache: false,
-	                                // Let jquery turn data map into query string
-	                                // only on GET requests.
-	                                processData : isGetRequest, 
-	                                success : function(data, status, xhr) {
-	                                	if ( xhr.status === 0 ) {
-	                                		error(xhr);
-	                                	} else {
-	                                		success.apply(this, arguments);
-	                                	}
-	                                },
-	                                contentType : "application/json",
-	                                error : error,
-	                                dataType : "json"
-	                            });
-                        	
-                        }
-                    };
-                })(method, url, data, success, failure), 0); // End timeout
+            if (isCrossDomain(url) && window.XDomainRequest)
+            {
+                // IE8 Cross domain
+                // TODO
+                if (typeof (failure) === "function")
+                {
+                    failure(new neo4j.exceptions.HttpException(-1, null, null, "Cross-domain requests are available in IE, but are not yet implemented in neo4js."));
+                }
+            } else
+            {
+            	$.ajax({
+                    url : url,
+                    type : method,
+                    data : data,
+                    timeout: timeout,
+                    cache: false,
+                    // Let jquery turn data map into query string
+                    // only on GET requests.
+                    processData : isGetRequest, 
+                    success : successHandler,
+                    contentType : "application/json",
+                    error : errorHandler,
+                    dataType : "json"
+                });
+            }
+        })(method, url, data, success, failure);
     },
 
     /**
@@ -143,9 +138,10 @@ neo4j.jqueryWebProvider = {
  * expansion to make other AJAX libraries available as underlying
  * implementation, thus dropping dependency on jQuery.
  */
-neo4j.Web = function(webProvider) {
+neo4j.Web = function(webProvider, events) {
 
     this.webProvider = webProvider || neo4j.jqueryWebProvider;
+    this.events = events || neo4j.events;
 
 };
 
@@ -307,12 +303,13 @@ _.extend(neo4j.Web.prototype, {
      * connection failures, and triggers events accordingly.
      */
     wrapFailureCallback : function(cb) {
+        var events = this.events;
     	return function(ex) {
     		if( typeof(ex) != "undefined" && ex instanceof neo4j.exceptions.ConnectionLostException ) {
-    			neo4j.events.trigger("web.connection_lost", _.toArray(arguments));
+    			events.trigger("web.connection_lost", _.toArray(arguments));
     			
     			// For backwards compatibility
-    			neo4j.events.trigger("web.connection.failed", _.toArray(arguments));
+    			events.trigger("web.connection.failed", _.toArray(arguments));
     		}
 
             cb.apply(this, arguments);
