@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>org.neo4j</groupId>
 		<artifactId>parent-pom</artifactId>
-		<version>21</version>
+		<version>23</version>
 	</parent>
 
 	<scm>
