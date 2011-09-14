@@ -39,18 +39,18 @@ neo4j.GraphDatabaseHeartbeat = function(db) {
      * These correspond to the granularities available on the server side.
      */
     this.timespan = {
-        year : 1000 * 60 * 60 * 24 * 365,
-        month : 1000 * 60 * 60 * 24 * 31,
-        week : 1000 * 60 * 60 * 24 * 7,
-        day : 1000 * 60 * 60 * 24,
-        hours : 1000 * 60 * 60 * 6,
-        minutes : 1000 * 60 * 35
+        year : 60 * 60 * 24 * 365,
+        month : 60 * 60 * 24 * 31,
+        week : 60 * 60 * 24 * 7,
+        day : 60 * 60 * 24,
+        hours : 60 * 60 * 6,
+        minutes : 60 * 35
     };
 
     /**
      * This is where the monitoring data begins.
      */
-    this.startTimestamp = (new Date()).getTime() - this.timespan.year;
+    this.startTimestamp = Math.round( (new Date()).getTime() / 1000 ) - this.timespan.year;
 
     /**
      * This is where the monitoring data ends.
@@ -265,27 +265,28 @@ neo4j.GraphDatabaseHeartbeat.prototype.waitForPulse = function(callback) {
  * @return {object} An object with a dataStart and a dataEnd key.
  */
 neo4j.GraphDatabaseHeartbeat.prototype.adjustRequestedTimespan = function(data) {
-    var timespan = (new Date()).getTime() - this.endTimestamp;
+    var now = Math.round((new Date()).getTime() / 1000);
+    var timespan = now - this.endTimestamp;
 
     if (timespan >= this.timespan.year)
     {
-        this.endTimestamp = (new Date()).getTime() - this.timespan.month;
+        this.endTimestamp = now - this.timespan.month;
         this.beat();
     } else if (timespan >= this.timespan.month)
     {
-        this.endTimestamp = (new Date()).getTime() - this.timespan.week;
+        this.endTimestamp = now - this.timespan.week;
         this.beat();
     } else if (timespan >= this.timespan.week)
     {
-        this.endTimestamp = (new Date()).getTime() - this.timespan.day;
+        this.endTimestamp = now - this.timespan.day;
         this.beat();
     } else if (timespan >= this.timespan.day)
     {
-        this.endTimestamp = (new Date()).getTime() - this.timespan.hours;
+        this.endTimestamp = now - this.timespan.hours;
         this.beat();
     } else if (timespan >= this.timespan.day)
     {
-        this.endTimestamp = (new Date()).getTime() - this.timespan.minutes;
+        this.endTimestamp = now - this.timespan.minutes;
         this.beat();
     }
 };
