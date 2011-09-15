@@ -10,9 +10,10 @@
 	<url>http://components.neo4j.org/${project.artifactId}/${project.version}</url>
 
 	<parent>
-		<groupId>org.neo4j</groupId>
+		<groupId>org.neo4j.build</groupId>
 		<artifactId>parent-pom</artifactId>
-		<version>23</version>
+		<version>25</version>
+    <relativePath/>
 	</parent>
 
 	<scm>
