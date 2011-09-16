@@ -29,6 +29,7 @@
 		<js.webtestdir>${basedir}/src/webtest/javascript</js.webtestdir>
 		<js.outputfile>neo4js.js</js.outputfile>
     <license-text.header>GPL-3-header.txt</license-text.header>
+    <skipTests>false</skipTests>
 	</properties>
 
 	<build>
@@ -229,37 +230,56 @@
 					<tagBase>https://svn.neo4j.org/drivers/javascript/${short-name}/tags</tagBase>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>de.berlios.jsunit</groupId>
-				<artifactId>jsunit-maven2-plugin</artifactId>
-				<version>1.3</version>
-				<executions>
-					<execution>
-						<id>test</id>
-						<phase>test</phase>
-						<goals>
-							<goal>jsunit-test</goal>
-						</goals>
-						<configuration>
-							<sourceDirectory>${project.build.outputDirectory}</sourceDirectory>
-							<sources>
-								<source>${js.outputfile}</source>
-							</sources>
-							<testSourceDirectory>${js.testdir}</testSourceDirectory>
-							<testSuites>
-								<testSuite>
-									<name>All tests</name>
-									<includes>
-										<include>**/*.js</include>
-									</includes>
-								</testSuite>
-							</testSuites>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 	</build>
+	
+	<profiles>
+	
+	  <profile>
+	    <id>jsunit-tests</id>
+	    <activation>
+        <property>
+          <name>skipTests</name>
+          <value>false</value>
+        </property>
+      </activation>
+	    <build>
+	      <plugins>
+			    <plugin>
+				    <groupId>de.berlios.jsunit</groupId>
+				    <artifactId>jsunit-maven2-plugin</artifactId>
+				    <version>1.3</version>
+				    <executions>
+					    <execution>
+						    <id>test</id>
+						    <phase>test</phase>
+						    <goals>
+							    <goal>jsunit-test</goal>
+						    </goals>
+						    <configuration>
+							    <sourceDirectory>${project.build.outputDirectory}</sourceDirectory>
+							    <sources>
+								    <source>${js.outputfile}</source>
+							    </sources>
+							    <testSourceDirectory>${js.testdir}</testSourceDirectory>
+							    <testSuites>
+								    <testSuite>
+									    <name>All tests</name>
+									    <includes>
+										    <include>**/*.js</include>
+									    </includes>
+								    </testSuite>
+							    </testSuites>
+						    </configuration>
+					    </execution>
+				    </executions>
+			    </plugin>
+	      </plugins>
+	    </build>
+	  
+	  </profile>
+	
+	</profiles>
 
 	<reporting>
 		<plugins>

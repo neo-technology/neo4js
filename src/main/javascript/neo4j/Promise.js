@@ -23,6 +23,11 @@
  * pattern.
  * 
  * Inspired by Ron Bucktons lightweight Promise implementation.
+ *
+ * @class
+ * @param init A function that will get passed two arguments,
+ *             fulfill and fail. Call one to either fulfill
+ *             or fail the promise.
  */
 neo4j.Promise = function(init) {
 
@@ -60,6 +65,12 @@ neo4j.Promise.fulfilled = function(value) {
 	});
 };
 
+/**
+ * Join several promises together, pass
+ * as many promises as you like in as arguments.
+ * @return A new promise that will be fulfilled when
+ *         all joined promises are fulfilled. 
+ */
 neo4j.Promise.join = function() {
     var joined = _.toArray(arguments);
     if(joined.length == 1) {
@@ -91,7 +102,8 @@ neo4j.Promise.join = function() {
 };
 
 _.extend(neo4j.Promise.prototype, {
-
+  /** @lends neo4j.Promise# */  
+  
 	/**
 	 * Add callbacks to handle when this promise is fulfilled or broken. Returns
 	 * a new promise that is controlled by fulfill/fail methods sent to 
@@ -140,6 +152,7 @@ _.extend(neo4j.Promise.prototype, {
 	},
 	
 	/**
+	 * Used to chain promises together. Contract:
 	 * Do not fulfill or fail this promise until the promise added 
 	 * here is fulfilled. Fail this promise if the chained promise fails. 
 	 */

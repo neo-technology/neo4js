@@ -64,8 +64,8 @@ neo4j.jqueryWebProvider = {
             	if( req.status === 0 ) {
             	    failure(new neo4j.exceptions.ConnectionLostException());
             	} else {
-                    var error = JSON.parse(req.responseText);
-                    failure(new neo4j.exceptions.HttpException(req.status, error, req));
+                  var error = JSON.parse(req.responseText);
+                  failure(new neo4j.exceptions.HttpException(req.status, error, req));
             	}
             } catch (e)
             {
