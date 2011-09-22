@@ -13,7 +13,7 @@
 		<groupId>org.neo4j.build</groupId>
 		<artifactId>parent-pom</artifactId>
 		<version>25</version>
-    <relativePath/>
+		<relativePath/>
 	</parent>
 
 	<scm>
@@ -28,8 +28,7 @@
 		<js.testdir>${basedir}/src/test/javascript</js.testdir>
 		<js.webtestdir>${basedir}/src/webtest/javascript</js.webtestdir>
 		<js.outputfile>neo4js.js</js.outputfile>
-    <license-text.header>GPL-3-header.txt</license-text.header>
-    <skipTests>false</skipTests>
+		<license-text.header>GPL-3-header.txt</license-text.header>
 	</properties>
 
 	<build>
@@ -239,8 +238,7 @@
 	    <id>jsunit-tests</id>
 	    <activation>
         <property>
-          <name>skipTests</name>
-          <value>false</value>
+          <name>!skipTests</name>
         </property>
       </activation>
 	    <build>

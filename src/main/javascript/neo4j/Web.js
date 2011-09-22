@@ -30,7 +30,7 @@ neo4j.jqueryWebProvider = {
 	 */
     ajax : function(args) {
         
-        var timeout = args.timeout || 5000,
+        var timeout = args.timeout || 6 * 60 * 60 * 1000,
             method = args.method,
             url = args.url,
             data = args.data,
