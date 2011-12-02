@@ -58,6 +58,8 @@ var mockWebProvider = {
 		  "node" : "http://localhost:7474/db/data/node",
 		  "extensions_info" : "http://localhost:7474/db/data/ext",
 		  "node_index" : "http://localhost:7474/db/data/index/node",
+		  "cypher" : "http://localhost:7474/db/data/cypher",
+		  "batch" : "http://localhost:7474/db/data/batch",
 		  "reference_node" : "http://localhost:7474/db/data/node/0",
 		  "extensions" : {
 		  }

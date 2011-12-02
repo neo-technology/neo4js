@@ -55,10 +55,9 @@ neo4j.models.JMXBean.prototype.parse = function(bean) {
  * Get a name for this bean. This will check if there is a name property
  * in the beanname (ie. some.domain:type=MemoryManager,name=CodeCacheManager ),
  * and return that. If none is available, it will return the first property,
- * and as a last resort, it will return the domain.
+ * and as a last resort, it will return the raw jmx name.
  */
 neo4j.models.JMXBean.prototype.getName = function(bean) {
-	
 	if ( this.properties['name'] ) {
 		return this.properties['name'];
 	} else {
@@ -67,9 +66,7 @@ neo4j.models.JMXBean.prototype.getName = function(bean) {
 		}
 	}
 	
-	// Fail, return domain name
-	return this.domain;
-	
+	return this.jmxName;
 };
 
 /**

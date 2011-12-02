@@ -70,6 +70,11 @@ neo4j.GraphDatabase = function(url, webClient)
      * Indexes, instance of {@link neo4j.index.Indexes}.
      */
     this.index = new neo4j.index.Indexes(this);
+
+    /**
+     * Cypher ExecutionEngine, instance of {@link neo4j.cypher.ExecutionEngine}.
+     */
+    this.cypher = new neo4j.cypher.ExecutionEngine(this);
     
     /**
      * Manager, instance of {@link neo4j.GraphDatabaseManager}.
@@ -181,6 +186,15 @@ _.extend(neo4j.GraphDatabase.prototype,
                 }, fail);
             });
         }
+    },
+    
+    /**
+     * Execute a cypher query against this database.
+     * @param query A cypher query string.
+     * @return A promise for a neo4j.cypher.QueryResult
+     */
+    query : function(query) {
+        return this.cypher.execute(query);
     },
 
     /**

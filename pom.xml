@@ -127,6 +127,11 @@
 								<include>neo4j/models/Node-min.js</include>
 								<include>neo4j/models/Relationship-min.js</include>
 								<include>neo4j/models/Path-min.js</include>
+								
+								<include>neo4j/cypher/__init__-min.js</include>
+								<include>neo4j/cypher/ExecutionEngine-min.js</include>
+								<include>neo4j/cypher/ResultRow-min.js</include>
+								<include>neo4j/cypher/QueryResult-min.js</include>
 
 								<include>neo4j/services/BackupService-min.js</include>
 								<include>neo4j/services/ConfigService-min.js</include>

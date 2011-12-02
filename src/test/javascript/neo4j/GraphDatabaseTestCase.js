@@ -830,5 +830,78 @@ _.extend(GraphDatabaseTest.prototype, {
         for(var i=0, l=types.length; i<l; i++) {
             this.assertEquals("Types should match the mocked ones.", types[i], result.types[i]);
         }
+    },
+    
+    testCypherQuery : function() {
+        clearWebmock();
+        mockServiceDefinition();
+        
+        var db = mockedGraphDatabase(),
+            result = {},
+            response = {
+          "data" : [ [ "know", {// Node representation
+                "outgoing_relationships" : "http://localhost:7474/db/data/node/1/relationships/out",
+                "data" : {
+                },
+                "traverse" : "http://localhost:7474/db/data/node/1/traverse/{returnType}",
+                "all_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/all/{-list|&|types}",
+                "property" : "http://localhost:7474/db/data/node/1/properties/{key}",
+                "self" : "http://localhost:7474/db/data/node/1",
+                "properties" : "http://localhost:7474/db/data/node/1/properties",
+                "outgoing_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/out/{-list|&|types}",
+                "incoming_relationships" : "http://localhost:7474/db/data/node/1/relationships/in",
+                "extensions" : {
+                },
+                "create_relationship" : "http://localhost:7474/db/data/node/1/relationships",
+                "all_relationships" : "http://localhost:7474/db/data/node/1/relationships/all",
+                "incoming_typed_relationships" : "http://localhost:7474/db/data/node/1/relationships/in/{-list|&|types}"
+              }, {// Relationship representation
+              "start" : "http://localhost:7474/db/data/node/0",
+              "data" : {
+              },
+              "self" : "http://localhost:7474/db/data/relationship/1",
+              "property" : "http://localhost:7474/db/data/relationship/1/properties/{key}",
+              "properties" : "http://localhost:7474/db/data/relationship/1/properties",
+              "type" : "KNOWS",
+              "extensions" : {
+              },
+              "end" : "http://localhost:7474/db/data/node/1"
+            } ], 
+            [ "know", null, { // Path representation
+            "start" : "http://localhost:7474/db/data/node/7",
+            "nodes" : [ "http://localhost:7474/db/data/node/7", "http://localhost:7474/db/data/node/6" ],
+            "length" : 1,
+            "relationships" : [ "http://localhost:7474/db/data/relationship/3" ],
+            "end" : "http://localhost:7474/db/data/node/6"
+          } ] ],
+          "columns" : [ "TYPE(r)", "n", "y" ]
+        };
+        
+        webmock("POST", "http://localhost:7474/db/data/cypher", response);
+        
+        var resultPromise = db.query("BLAH BLAH BLHA");
+        
+        this.assertTrue("GraphDatabase#query method should return a value.", typeof(resultPromise) != "undefined");
+        this.assertTrue("GraphDatabase#query method should return a promise.", resultPromise instanceof neo4j.Promise);
+     
+        resultPromise.then(function(cypherResult) {
+           result.cypherResult = cypherResult; 
+        });
+        
+        this.assertTrue("Promise should be fulfilled", typeof(result.cypherResult) != "undefined");
+        this.assertTrue("cypher result should be of type QueryResult", result.cypherResult instanceof neo4j.cypher.QueryResult);
+        
+        var qr = result.cypherResult;
+        
+        this.assertEquals("query result should have two rows", qr.size(), 2);
+        
+        var firstRow = qr.next(),
+            secondRow = qr.next();
+        
+        this.assertTrue("should contain correct result", firstRow.get("TYPE(r)") == "know");
+        this.assertTrue("should contain correct result", firstRow.get("n") instanceof neo4j.models.Node);
+        this.assertTrue("should contain correct result", firstRow.get("y") instanceof neo4j.models.Relationship);
+        this.assertTrue("should contain correct result", secondRow.get("n") == null);
+        
     }
 });
