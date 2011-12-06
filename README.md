@@ -11,7 +11,7 @@ for a result of some kind.
 
 For instance:
 
-    var nodePromise = graph.node("http://localhost:75);
+    var nodePromise = graph.node("http://localhost:75");
     nodePromise.then(function(node) {
         // Do something with the node.
     });
