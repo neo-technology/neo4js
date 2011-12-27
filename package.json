@@ -1,0 +1,19 @@
+{
+    "name":"neo4js",
+    "description":"wrapped neo4js.js",
+    "keywords":[ "neo4js" ],
+    "version":"0.0.1",
+    "author":"Thomas Baum <thomas.baum@neopersistence.com>",
+    "main":"./node-neo4js.js",
+    "homepage":"http://neo4j.org",
+    "repository":{
+        "type":"git",
+        "url":"git://github.com/neo4j/neo4js.git"
+    },
+    "engines":{
+        "node":">= 0.4.6"
+    },
+    "dependencies":{
+        "underscore":">= 1.1.7"
+    }
+}

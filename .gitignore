@@ -11,3 +11,5 @@
 *.iml
 .idea/
 .DS_Store
+node-neo4js.js
+node_modules
