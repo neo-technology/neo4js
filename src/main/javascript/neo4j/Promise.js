@@ -18,6 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+var neo4j = neo4j || {};
+var _ = _ || require('underscore');
 /**
  * Used to represent a future value, same or similar to "future" and "delay"
  * pattern.
@@ -228,3 +230,5 @@ _.extend(neo4j.Promise.prototype, {
 	}
 
 });
+
+module.exports=neo4j.Promise;
