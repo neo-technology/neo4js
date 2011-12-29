@@ -43,7 +43,7 @@
  GraphDatabase
  */
 
-
-exports.GraphDatabase = function (url) {
-    return new neo4j.GraphDatabase(url);
+module.exports.GraphDatabase = function (url) {
+    var Web = require('./src/npm/javascript/web');
+    return new neo4j.GraphDatabase(url, new Web());
 };

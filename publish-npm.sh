@@ -1,4 +1,7 @@
+#!/bin/bash -e -x
 
+rm -rf target/npm
+mkdir -p target/npm/package
 
 cat src/npm/javascript/header.js \
 	src/main/javascript/neo4j/__init__.js \
@@ -16,7 +19,6 @@ cat src/npm/javascript/header.js \
 	src/main/javascript/neo4j/log.js \
 	src/main/javascript/neo4j/proxy.js \
 	src/main/javascript/neo4j/Events.js \
-	src/main/javascript/neo4j/Web.js \
 	src/main/javascript/neo4j/Service.js \
 	src/main/javascript/neo4j/GraphDatabaseHeartbeat.js \
 	src/main/javascript/neo4j/models/__init__.js \
@@ -44,6 +46,21 @@ cat src/npm/javascript/header.js \
 	src/main/javascript/neo4j/index/Indexes.js \
 	src/main/javascript/neo4j/GraphDatabaseManager.js \
 	src/main/javascript/neo4j/GraphDatabase.js \
-	src/npm/javascript/footer.js > node-neo4js.js
+	src/npm/javascript/footer.js > target/npm/package/node-neo4js.js
 
-npm publish --force
+cd target/npm
+mkdir -p package/src/npm/javascript package/src/main/javascript/neo4j
+cp ../../src/npm/javascript/web.coffee package/src/npm/javascript/web.coffee
+cp ../../src/main/javascript/neo4j/Promise.js package/src/main/javascript/neo4j
+cp ../../package.json package
+rm -f ../neo4js.tgz
+tar cfz ../neo4js.tgz *
+cd ../..
+
+# package.json node-neo4js.js src/npm/javascript/web.coffee
+
+# mkdir -p neo target/npm/package
+# cp package.json node-neo4js.js target/npm/package
+# mkdir -p target/npm/pacakge/src/main/npm
+# cp src/main/npm/javascript target/npm/pacakge/src/main/npm
+npm publish --force target/neo4js.tgz
