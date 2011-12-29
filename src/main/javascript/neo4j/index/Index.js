@@ -159,8 +159,8 @@ _.extend(neo4j.index.Index.prototype,
                 key = values[1],
                 value = values[2],
                 urls = values[3];
-            
-            index.db.web.post(urls[index.getType()] + "/" + index.name + "/" + key + "/" + value, url, function(result) {
+
+            index.db.web.post(urls[index.getType()] + "/" + index.name, { key:key, value:value, uri:url }, function (result) {
                 fulfill(true);
             }, fail);
         });
