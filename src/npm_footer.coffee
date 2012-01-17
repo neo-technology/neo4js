@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/*
+###
  services
  exceptions
  setTimeout
@@ -41,9 +41,9 @@
  index
  GraphDatabaseManager
  GraphDatabase
- */
+###
 
 module.exports.GraphDatabase = function (url) {
-    var Web = require('./src/npm/javascript/web');
+    var Web = require('../lib/web.js');
     return new neo4j.GraphDatabase(url, new Web());
 };
