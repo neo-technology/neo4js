@@ -1,4 +1,4 @@
-Promise = require '../../main/javascript/neo4j/Promise.js'
+Promise = require './neo4j/Promise'
 Http = require 'http'
 Url = require 'url'
 _ = require 'underscore'
@@ -20,7 +20,9 @@ class Web
     url = url.replace "{" + key + "}", replaceMap[key] for key of replaceMap
     url
 
-  constructor:->
+  constructor: (provider,events)->
+    @events = events
+    console.log "create WEB"
     auth_cache = {}
     requestNumber = 0
 
@@ -49,6 +51,10 @@ class Web
             console.log logPrefix + " FAILED (" + arguments[0] + ")"
             fail.call this, {error:arguments[0], args:arguments}
             userFailure.apply this, arguments if userFailure
+            events.trigger "web.connection_lost", _.toArray(arguments)
+            # For backwards compatibility
+            events.trigger "web.connection.failed", _.toArray(arguments)
+
 
           success = ->
             fulfill.call this, {data:arguments[0], args:arguments}

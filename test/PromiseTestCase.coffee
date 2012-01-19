@@ -1,5 +1,5 @@
 ###
-Copyright (c) 2002-2011 "Neo Technology,"
+Copyright (c) 2002-2012 "Neo Technology,"
 Network Engine for Objects in Lund AB [http://neotechnology.com]
 
 This file is part of Neo4j.
@@ -18,14 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-Promise = require("../lib/neo4j/Promise.js")
-_ = require("underscore")
+Promise = require("../lib/neo4j/Promise")
 
 ###
 Test that eventually fulfulling a promise allows hooking handlers
 to it, and that the handlers recieve the result as expected.
 ###
 exports.testEventuallyFulfillingPromise = (test) ->
+  test.expect 2
   ctx = {}
   expected = 123
 
@@ -50,6 +50,7 @@ Test that eventually breaking a promise allows hooking handlers
 to it, and that the handlers recieve the result as expected.
 ###
 exports.testEventuallyFailingPromise = (test) ->
+  test.expect 2
   ctx = {}
   expected = 123
 
@@ -74,6 +75,7 @@ Test that fulfulling a promise immediately still allows hooking handlers
 to it, and that the handlers recieve the result as expected.
 ###
 exports.testDirectlyFulfillingPromise = (test) ->
+  test.expect 2
   result = {}
   expected = 123
 
@@ -95,6 +97,7 @@ Test that breaking a promise immediately still allows hooking handlers
 to it, and that the handlers recieve the result as expected.
 ###
 exports.testDirectlyFailingPromise = (test) ->
+  test.expect 2
   result = {}
   expected = 123
   promise = new Promise((fulfill, fail) -> fail expected)
@@ -107,7 +110,7 @@ exports.testDirectlyFailingPromise = (test) ->
   )
 
   test.equal result.pResult, expected, "Failed result should have been propagated and set by our callback method."
-  test.equal result.fulfillCall, `undefined`, "Fulfill callback should not have been called."
+  test.equal result.fulfillCall, undefined, "Fulfill callback should not have been called."
   test.done()
 
 
@@ -115,6 +118,7 @@ exports.testDirectlyFailingPromise = (test) ->
 Test wrapping a value in a promise.
 ###
 exports.testPromiseWrapping = (test) ->
+  test.expect 2
   value = 12
   promiseValue = new Promise()
   wrappedValue = Promise.wrap(value)
@@ -129,14 +133,13 @@ exports.testPromiseWrapping = (test) ->
 Test fulfilling a promise with a result == false. (Regression test.)
 ###
 exports.testFulfillWithFalseResult = (test) ->
+  test.expect 1
   results = {}
   promise = new Promise((fulfill) -> fulfill false)
-  promise.then(
-    (result) ->
+  promise.then((result) ->
       results.result = result
   )
-  test.ok typeof (results.result) isnt "undefined", "The promise should be fulfilled."
-  test.ok results.result is false, "The result should be exactly equal to false."
+  test.equal results.result, false, "The result should be exactly equal to false."
   test.done()
 
 
@@ -144,17 +147,38 @@ exports.testFulfillWithFalseResult = (test) ->
 Test joining several promises into one.
 ###
 exports.testJoinPromises = (test) ->
+  test.expect 2
   firstPromise = Promise.fulfilled(12)
   secondPromise = Promise.fulfilled(13)
   results = {}
   joined = Promise.join(firstPromise, secondPromise)
-  joined.then(
-    (result, fulfill, fail) ->
+  joined.then((result, fulfill, fail) ->
       results.result = result
   )
   test.ok joined instanceof Promise, "Joining promises should return a new promise."
-  test.ok _.isArray(results.result), "The first argument to handler of joined promise should be a list of results."
-  test.equal results.result.length, 2, "The result argument should be an array of length 2."
-  test.equal results.result[0], 12, "The first item in the results argument should be 12."
-  test.equal results.result[1], 13, "The second item in the results argument should be 13."
+  test.deepEqual results.result, [12, 13], "The result argument should be an array."
   test.done()
+
+###
+Test joining several promises into one, while one is failing
+###
+exports.testJoinFailedPromises = (test) ->
+  test.expect 3
+  expected = 123
+  firstPromise = Promise.fulfilled(12)
+  secondPromise = new Promise((fulfill, fail)-> fail expected)
+  results = {}
+  joined = Promise.join(firstPromise, secondPromise)
+  joined.then(
+    (result, fulfill, fail) ->
+      results.fulfillCall = true
+    (failed) ->
+      results.pResult = expected
+  )
+  test.ok joined instanceof Promise, "Joining promises should return a new promise."
+  test.equal results.fulfillCall, undefined, "Fulfill callback should not have been called."
+  test.equal results.pResult, expected, "Failed result should have been propagated and set by our callback method."
+  test.done()
+
+
+

@@ -1,5 +1,5 @@
 ###
-Copyright (c) 2002-2011 "Neo Technology,"
+Copyright (c) 2002-2012 "Neo Technology,"
 Network Engine for Objects in Lund AB [http://neotechnology.com]
 
 This file is part of Neo4j.
@@ -18,32 +18,35 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-_ = require("underscore")
-
-neo4j = {exceptions :require("../lib/neo4j/exception.js"), Events:require("../lib/neo4j/Events.js") }
-{ webmock, events, mockServiceDefinition, clearWebmock, mockWeb, mockedGraphDatabase} = require("util/MockWebProvider.js")
-
-
-{ ConnectionLostException } = require("neo4j/exceptions/ConnectionLostException.coffee")
-
-neo4j.events = events()
+mock = require("./util/MockWebProvider")
+neo4j = require("../lib/neo4j")
 
 exports.testServerUnresponsive = (test)->
-  result = { eventTriggered:false, legacyEventTriggered:false }
+  test.expect 3
 
-  clearWebmock()
-  webmock "POST", "http://localhost:7474/db/data/node", (req) ->
-    console.log "fu:" + req.failure
-    throw new ConnectionLostException()
+  result = { lost:false, failed:false }
 
-  neo4j.events.bind "web.connection.failed", ->
-    result.legacyEventTriggered = true
+  mock.clear()
+  mock.webmock "POST", "http://localhost:7474/db/data/node", (req) ->
+    req.failure new neo4j.exceptions.ConnectionLostException()
 
-  neo4j.events.bind "web.connection_lost", ->
-    result.eventTriggered = true
+  event1 = new neo4j.Promise()
+  event2 = new neo4j.Promise()
 
-  mockWeb.post "http://localhost:7474/db/data/node"
+  mock.events.bind "web.connection_lost", ->
+    result.lost = true
+    event1.fulfill()
 
-  test.ok result.legacyEventTriggered, "Legacy connection failed event should have been triggered."
-  test.ok result.eventTriggered, "Connection lost event should have been triggered."
-  test.done()
+  mock.events.bind "web.connection.failed", ->
+    result.failed = true
+    event2.fulfill()
+
+  neo4j.Promise.join(event1, event2).then(
+    (success)->
+      test.ok result.lost, "Legacy connection failed event should have been triggered."
+      test.ok result.failed, "Connection lost event should have been triggered."
+      test.equals success.length, 2, "Expect Both Events Triggered"
+      test.done()
+  )
+
+  mock.mockWeb.post "http://localhost:7474/db/data/node"
