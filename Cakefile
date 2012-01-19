@@ -2,6 +2,7 @@ fs = require 'fs'
 spawn = require('child_process').spawn
 reporters = require('nodeunit').reporters
 colors = require 'colors'
+testDirectories = ['test', 'test/models', 'test/index']
 
 build = (options, callback) ->
   coffee = spawn 'coffee', options
@@ -21,10 +22,14 @@ task 'dev', 'Continuous compilation', ->
 
 task 'test', 'Run tests', ->
   build ['--bare', '--compile', '--output', 'lib', 'src'], ->
-    reporters.default.run ['test', 'test/models', 'test/index']
+    console_org = console.log
+    console.log = ->
+    reporters.junit.run testDirectories, output :__dirname + "/target/surefire-reports", ->
+      console.log = console_org
+      reporters.default.run testDirectories, null, ->
+        console.log "-finished-".green
 
 stitch = require('stitch')
-
 
 task 'stitch', ->
   package = stitch.createPackage paths:[__dirname + '/lib', __dirname + '/lib/neo4j', __dirname + '/lib/neo4j/cypher',
