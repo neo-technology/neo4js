@@ -290,11 +290,8 @@ _.extend(neo4j.GraphDatabase.prototype,
         if (typeof (this._serviceDefinitionPromise) === "undefined")
         {
             var db = this;
-            this._serviceDefinitionPromise = this.getDiscoveryDocument().then(function( discovery, fulfill, fail ) {
-                db.web.get( discovery.data , function(resources)
-                {
-                    fulfill(resources);
-                });
+            this._serviceDefinitionPromise = this.getDiscoveryDocument().then(function (discovery, fulfill, fail) {
+                db.web.get(discovery.data, fulfill, fail);
             });
         }
 
@@ -305,13 +302,8 @@ _.extend(neo4j.GraphDatabase.prototype,
         if (typeof (this._discoveryDocumentPromise) === "undefined")
         {
             var db = this;
-            this._discoveryDocumentPromise = new neo4j.Promise(function(
-                    fulfill, fail)
-            {
-                db.web.get(db.url, function(resources)
-                {
-                    fulfill(resources);
-                });
+            this._discoveryDocumentPromise = new neo4j.Promise(function (fulfill, fail) {
+                db.web.get(db.url, fulfill, fail);
             });
         }
 
