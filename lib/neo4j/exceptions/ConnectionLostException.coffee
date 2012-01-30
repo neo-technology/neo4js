@@ -18,12 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
+###
+Triggered when there is some error in transit or on the server
+###
 
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+HttpException = require("./HttpException")
+
+module.exports = class ConnectionLostException extends HttpException
+  constructor: ->
+    super -1, null, null, "The server connection was lost."

@@ -18,9 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-mock = require("./util/MockWebProvider")
+mock = require("../lib/neo4j/WebMockProvider")
 _ = require("underscore")
-neo4j = require("../lib/neo4j")
+neo4j = require("../lib/neo4js")
 
 exports.tearDown = (callback)->
   mock.stop()
@@ -32,7 +32,7 @@ exports.testInstantiateClient = (test) ->
   serverRoot = "theserverroot"
   mngUrl = "/db/manage/"
   dataUrl = "thedataurl"
-  mock.webmock "GET", serverRoot, { management:mngUrl, data:dataUrl }
+  mock.webmock "GET", serverRoot, { management: mngUrl, data: dataUrl }
   mock.webmock "GET", dataUrl, {}
   mock.webmock "GET", mngUrl, {}
   db = new neo4j.GraphDatabase serverRoot, mock.mockWeb
@@ -45,11 +45,11 @@ exports.testCreateNode = (test) ->
   test.expect 4
   mockedUrl = "someurl"
   mock.clear()
-  mock.webmock "POST", "http://localhost:7474/db/data/node", self:mockedUrl
+  mock.webmock "POST", "http://localhost:7474/db/data/node", self: mockedUrl
 
   db = mock.mockedGraphDatabase()
   result = {}
-  nodePromise = db.node { name:"lisa", age:12 }
+  nodePromise = db.node { name: "lisa", age: 12 }
   nodePromise.then((node) -> result.node = node)
 
   test.ok nodePromise instanceof neo4j.Promise, "GraphDatabase#node method call should return a promise."
@@ -60,10 +60,10 @@ exports.testCreateNode = (test) ->
 
 exports.testRemoveNode = (test) ->
   test.expect 2
-  result = called:false, promiseFulfilled:false
+  result = called: false, promiseFulfilled: false
 
   mock.clear()
-  mock.webmock "GET", "http://localhost:7474/db/data/node/1", self:"http://localhost:7474/db/data/node/1"
+  mock.webmock "GET", "http://localhost:7474/db/data/node/1", self: "http://localhost:7474/db/data/node/1"
 
   mock.webmock "DELETE", "http://localhost:7474/db/data/node/1", (req) ->
     result.called = true
@@ -79,12 +79,12 @@ exports.testRemoveNode = (test) ->
 
 exports.testRemoveNodeWithRelationships = (test) ->
   test.expect 4
-  result = { deleteCalled:false, promiseFulfilled:false, deleteCalledAgain:false, deleteRelationshipCalled:false }
+  result = { deleteCalled: false, promiseFulfilled: false, deleteCalledAgain: false, deleteRelationshipCalled: false }
 
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/1",
-    self:"http://localhost:7474/db/data/node/1"
-    all_relationships:"http://localhost:7474/db/data/node/1/relationships/all"
+    self: "http://localhost:7474/db/data/node/1"
+    all_relationships: "http://localhost:7474/db/data/node/1/relationships/all"
 
   mock.webmock "DELETE", "http://localhost:7474/db/data/node/1", (req) ->
     unless result.deleteCalled
@@ -95,7 +95,7 @@ exports.testRemoveNodeWithRelationships = (test) ->
       req.success true
 
   mock.webmock "GET", "http://localhost:7474/db/data/node/1/relationships/all", [
-    self:"http://localhost:7474/db/data/relationship/1"
+    self: "http://localhost:7474/db/data/relationship/1"
   ]
   mock.webmock "DELETE", "http://localhost:7474/db/data/relationship/1", (req) ->
     result.deleteRelationshipCalled = true
@@ -115,7 +115,7 @@ exports.testGetNode = (test) ->
   test.expect 5
   nodeUrl = "someurl"
   mock.clear()
-  mock.webmock "GET", nodeUrl, data:{ name:"Bob"}, self:nodeUrl
+  mock.webmock "GET", nodeUrl, data: { name: "Bob"}, self: nodeUrl
 
   db = mock.mockedGraphDatabase()
   result = {}
@@ -133,7 +133,7 @@ exports.testGetNodeById = (test) ->
   test.expect 5
   nodeUrl = "http://localhost:7474/db/data/node/1"
   mock.clear()
-  mock.webmock "GET", nodeUrl, data:{name:"Bob"}, self:nodeUrl
+  mock.webmock "GET", nodeUrl, data: {name: "Bob"}, self: nodeUrl
 
   db = mock.mockedGraphDatabase()
   result = {}
@@ -151,9 +151,9 @@ exports.testGetRelationship = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/relationship/1",
-    start:"http://localhost:7474/db/data/node/0"
-    self:"http://localhost:7474/db/data/relationship/1"
-    end:"http://localhost:7474/db/data/node/1"
+    start: "http://localhost:7474/db/data/node/0"
+    self: "http://localhost:7474/db/data/relationship/1"
+    end: "http://localhost:7474/db/data/node/1"
 
   db = mock.mockedGraphDatabase()
   result = {}
@@ -169,9 +169,9 @@ exports.testGetRelationshipById = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/relationship/1",
-    start:"http://localhost:7474/db/data/node/0"
-    self:"http://localhost:7474/db/data/relationship/1"
-    end:"http://localhost:7474/db/data/node/1"
+    start: "http://localhost:7474/db/data/node/0"
+    self: "http://localhost:7474/db/data/relationship/1"
+    end: "http://localhost:7474/db/data/node/1"
 
   db = mock.mockedGraphDatabase()
   result = {}
@@ -185,13 +185,13 @@ exports.testGetRelationshipById = (test) ->
 
 exports.testRemoveRelationship = (test) ->
   test.expect 2
-  result = called:false, promiseFulfilled:false
+  result = called: false, promiseFulfilled: false
 
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/relationship/1",
-    start:"http://localhost:7474/db/data/node/0"
-    self:"http://localhost:7474/db/data/relationship/1"
-    end:"http://localhost:7474/db/data/node/1"
+    start: "http://localhost:7474/db/data/node/0"
+    self: "http://localhost:7474/db/data/relationship/1"
+    end: "http://localhost:7474/db/data/node/1"
 
   mock.webmock "DELETE", "http://localhost:7474/db/data/relationship/1", (req) ->
     result.called = true
@@ -209,13 +209,13 @@ exports.testGetNodeOrRelationship = (test) ->
   test.expect 6
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/1",
-    data:name:"Bob"
-    self:"http://localhost:7474/db/data/node/1"
+    data: name: "Bob"
+    self: "http://localhost:7474/db/data/node/1"
 
   mock.webmock "GET", "http://localhost:7474/db/data/relationship/1",
-    start:"http://localhost:7474/db/data/node/0"
-    self:"http://localhost:7474/db/data/relationship/1"
-    end:"http://localhost:7474/db/data/node/1"
+    start: "http://localhost:7474/db/data/node/0"
+    self: "http://localhost:7474/db/data/relationship/1"
+    end: "http://localhost:7474/db/data/node/1"
 
   db = mock.mockedGraphDatabase()
   result = {}
@@ -238,12 +238,12 @@ exports.testSetProperties = (test) ->
   test.expect 7
   nodeUrl = "someurl"
   result = {}
-  data = name:"Orvar", age:12
+  data = name: "Orvar", age: 12
 
   mock.clear()
   mock.webmock "GET", nodeUrl,
-    self:nodeUrl
-    properties:"http://localhost:7474/db/data/node/1/properties"
+    self: nodeUrl
+    properties: "http://localhost:7474/db/data/node/1/properties"
 
   mock.webmock "PUT", "http://localhost:7474/db/data/node/1/properties", (req) ->
     result.serverCalled = true
@@ -270,7 +270,7 @@ exports.testGetRelationships = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/0/relationships/all", [
-    self:"http://localhost:7474/db/data/relationship/1"
+    self: "http://localhost:7474/db/data/relationship/1"
   ]
   db = mock.mockedGraphDatabase()
   result = {}
@@ -290,7 +290,7 @@ exports.testGetTypedRelationships = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/0/relationships/all/KNOWS&LIKES", [
-    self:"http://localhost:7474/db/data/relationship/1"
+    self: "http://localhost:7474/db/data/relationship/1"
   ]
   db = mock.mockedGraphDatabase()
   result = {}
@@ -310,7 +310,7 @@ exports.testGetIncomingTypedRelationships = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/0/relationships/in/KNOWS&LIKES", [
-    self:"http://localhost:7474/db/data/relationship/1"
+    self: "http://localhost:7474/db/data/relationship/1"
   ]
   db = mock.mockedGraphDatabase()
   result = {}
@@ -331,7 +331,7 @@ exports.testGetOutgoingTypedRelationships = (test) ->
   test.expect 3
   mock.clear()
   mock.webmock "GET", "http://localhost:7474/db/data/node/0/relationships/out/KNOWS&LIKES", [
-    self:"http://localhost:7474/db/data/relationship/1"
+    self: "http://localhost:7474/db/data/relationship/1"
   ]
   db = mock.mockedGraphDatabase()
   result = {}
@@ -366,7 +366,7 @@ exports.testGetReferenceNode = (test) ->
 exports.testGetNonExistantReferenceNode = (test) ->
   test.expect 2
   mock.clear()
-  mock.webmock "GET", "http://localhost:7474/db/data/node/0", null
+  mock.webmock "GET", "http://localhost:7474/db/data/node/0", (res)-> res.failed()
   db = mock.mockedGraphDatabase()
   result = {}
   nodePromise = db.referenceNode()
@@ -381,8 +381,8 @@ exports.testCreateRelationship = (test) ->
   mock.clear()
   db = mock.mockedGraphDatabase()
   result = {}
-  mock.webmock "GET", "http://localhost:7474/db/data/node/1", self:"http://localhost:7474/db/data/node/1"
-  mock.webmock "POST", "http://localhost:7474/db/data/node/0/relationships", self:"http://localhost:7474/db/data/relationship/1"
+  mock.webmock "GET", "http://localhost:7474/db/data/node/1", self: "http://localhost:7474/db/data/node/1"
+  mock.webmock "POST", "http://localhost:7474/db/data/node/0/relationships", self: "http://localhost:7474/db/data/relationship/1"
 
   relPromise = db.rel db.referenceNode(), "KNOWS", db.node("http://localhost:7474/db/data/node/1")
   relPromise.then((relationship) -> result.relationship = relationship)
@@ -407,9 +407,9 @@ exports.testCreateRelationshipToNonExistantNode = (test) ->
   result = {}
   mock.webmock "POST", "http://localhost:7474/db/data/node/0/relationships", (req) ->
     req.failure new neo4j.exceptions.HttpException(400,
-      message:"For input string: \"jibberish\""
-      exception:"org.neo4j.server.rest.repr.BadInputException: For input string: \"jibberish\""
-      stacktrace:[ "org.neo4j.server.rest.web.RestfulGraphDatabase.extractNodeId(RestfulGraphDatabase.java:105)",
+      message: "For input string: \"jibberish\""
+      exception: "org.neo4j.server.rest.repr.BadInputException: For input string: \"jibberish\""
+      stacktrace: [ "org.neo4j.server.rest.web.RestfulGraphDatabase.extractNodeId(RestfulGraphDatabase.java:105)",
         ".....", "org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)" ], req)
 
   relPromise = db.rel db.referenceNode(), "KNOWS", "jibberish"
@@ -418,12 +418,13 @@ exports.testCreateRelationshipToNonExistantNode = (test) ->
   test.ok typeof (relPromise) isnt "undefined", "GraphDatabase#rel method should return a value."
   test.ok relPromise instanceof neo4j.Promise, "GraphDatabase#rel method should return a promise."
   test.ok typeof (result.error) isnt "undefined", "Promise should fail"
-  test.ok result.error instanceof neo4j.exceptions.NotFoundException, "Error should be NotFoundException"
+  test.ok result.error instanceof neo4j.exceptions.HttpException, "Error should be HttpException"
   test.done()
 
 exports.testCreateRelationshipFromNonExistantNode = (test) ->
   test.expect 4
   mock.clear()
+  mock.webmock "GET", "jibberish", (res)-> res.failed()
   db = mock.mockedGraphDatabase()
   result = {}
   relPromise = db.rel "jibberish", "KNOWS", db.referenceNode()
@@ -458,10 +459,10 @@ exports.testCypherQuery = (test) ->
   db = mock.mockedGraphDatabase()
   result = {}
 
-  mock.webmock "POST", "http://localhost:7474/db/data/cypher", { data:[
-    [ "know", { data:{} } , { data:{}, type:"KNOWS" } ],
+  mock.webmock "POST", "http://localhost:7474/db/data/cypher", { data: [
+    [ "know", { data: {} } , { data: {}, type: "KNOWS" } ],
     [ "know", null, ]
-  ], columns:[ "TYPE(r)", "n", "y" ] }
+  ], columns: [ "TYPE(r)", "n", "y" ] }
 
   resultPromise = db.query("BLAH BLAH BLHA")
   test.ok typeof (resultPromise) isnt "undefined", "GraphDatabase#query method should return a value."

@@ -15,13 +15,13 @@ build = (options, callback) ->
       callback?(status)
 
 task 'build', 'Compile Coffeescript', ->
-  build ['--bare', '--compile', '--output', 'lib', 'src'], -> console.log "success".green
+#  build ['--bare', '--compile', '--output', 'lib', 'src'], -> console.log "success".green
 
 task 'dev', 'Continuous compilation', ->
-  build ['--watch', '--bare', '--compile', '--output', 'lib', 'src']
+#  build ['--watch', '--bare', '--compile', '--output', 'lib', 'src']
 
 task 'test', 'Run tests', ->
-  build ['--bare', '--compile', '--output', 'lib', 'src'], ->
+#  build ['--bare', '--compile', '--output', 'lib', 'src'], ->
     console_org = console.log
     console.log = ->
     reporters.junit.run testDirectories, output :__dirname + "/target/surefire-reports", ->

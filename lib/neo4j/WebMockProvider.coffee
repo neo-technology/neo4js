@@ -18,9 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-Events = require "../../lib/neo4j/Events.js"
-Web = require "../../lib/neo4j/web.js"
-GraphDatabase = require "../../lib/neo4j/GraphDatabase.js"
+Events = require "./Events"
+Web = require "./Web"
+GraphDatabase = require "./GraphDatabase"
 
 class MockWebProvider
 
@@ -81,10 +81,10 @@ class MockWebProvider
       incoming_typed_relationships:node0 + "/relationships/in/{-list|&|types}"
 
   ajax:(args)->
-    # console.log args.method, args.url
     unless @definitions[args.method]? and (mocker = @definitions[args.method][args.url])?
-      console.log "-missing: " + "No such endpoint defined: " + args.method + " - " + args.url
-      throw new Error("No such endpoint defined: " + args.method + " - " + args.url)
+      error = new Error("No such endpoint defined: " + args.method + " - " + args.url)
+      console.log error.stack
+      throw error
 
     if typeof mocker is "function"
       mocker { method:args.method, url:args.url, data:args.data, success:args.success, failure:args.failure }
@@ -94,7 +94,8 @@ class MockWebProvider
 events = new Events()
 mockWebProvider = new MockWebProvider()
 mockWeb = new Web(mockWebProvider, events)
-db = null;
+db = null
+
 exports.webmock = (method, url, mocker)-> mockWebProvider.mock(method, url, mocker)
 exports.clear = -> mockWebProvider.clear()
 exports.mockedGraphDatabase = ->

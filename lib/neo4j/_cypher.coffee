@@ -18,12 +18,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
-
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+module.exports.ExecutionEngine = require("./cypher/ExecutionEngine")
+module.exports.QueryResult = require("./cypher/QueryResult")
+module.exports.ResultRow = require("./cypher/ResultRow")

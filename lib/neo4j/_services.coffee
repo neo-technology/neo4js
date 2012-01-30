@@ -18,12 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
-
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+module.exports.BackupService = require("./services/BackupService")
+module.exports.ConfigService = require("./services/ConfigService")
+module.exports.ImportService = require("./services/BackupService")
+module.exports.ExportService = require("./services/ExportService")
+module.exports.ConsoleService = require("./services/ConsoleService")
+module.exports.JmxService = require("./services/JmxService")
+module.exports.LifecycleService = require("./services/LifecycleService")
+module.exports.MonitorService = require("./services/MonitorService")

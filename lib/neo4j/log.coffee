@@ -18,12 +18,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
+###
+Thin wrapper around console.log, making sure it exists.
+@param anything, all will be passed to console.log
+###
+module.exports = log = ->
+  console.log.apply this, arguments  if typeof console isnt "undefined" and typeof console.log is "function"
 
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()

@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-mock = require("./util/MockWebProvider")
-neo4j = require("../lib/neo4j")
+mock = require("../lib/neo4j/WebMockProvider")
+neo4j = require("../lib/neo4js")
 
 exports.testServerUnresponsive = (test)->
   test.expect 3

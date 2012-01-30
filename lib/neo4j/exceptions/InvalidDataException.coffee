@@ -18,12 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
+###
+Triggered when instantiating a node or relationship with invalid data.
+###
 
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+module.exports = class InvalidDataException extends Error
+  constructor: ->
+    super "Unable to create relationship or node from the provided data. " +
+    "This may be because you tried to get a node or relationship from an invalid url."
+
+

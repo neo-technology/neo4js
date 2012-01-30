@@ -1,15 +1,7 @@
-*~
-\#*
-*/target/
-/target/
-*.swp
-.project
-.classpath
-.settings
+target
 *.iws
 *.ipr
 *.iml
-.idea/
+.idea
 .DS_Store
-node-neo4js.js
 node_modules

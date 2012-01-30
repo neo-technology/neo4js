@@ -18,12 +18,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
+###
+Triggered when there is some error in transit or on the server side.
+###
+module.exports = class HttpException extends Error
 
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+  RESPONSE_CODES = 'Conflict': 409, 'NotFound': 404
+
+  constructor: (@status, @data, @req, message)->
+    message |= "A server error or a network error occurred. Status code: " + status + "."
+    @data |= {}
+    @req |= {}
+    super message
+
+    # define methods  isConflict, isNotFound ...
+    for name,code of RESPONSE_CODES
+      ( (code)-> HttpException::['is' + name] = -> @status == code )(code)
+
+

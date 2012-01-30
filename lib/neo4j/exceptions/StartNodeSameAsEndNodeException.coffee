@@ -18,12 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-neo4j = require("../../lib/neo4js")
-
-exports.testHasProperty = (test) ->
-  test.expect 2
-  pc = new neo4j.models.PropertyContainer()
-  test.ok !pc.hasProperty("someprop"), "Property should not exist."
-  pc.setProperty "someprop"
-  test.ok pc.hasProperty("someprop"), "Property should exist."
-  test.done()
+###
+Triggered when creating self-relationships.
+###
+module.exports = class StartNodeSameAsEndNodeException extends Error
+  constructor: (@url)->
+    super "You cannot create a relationship with the same start and end node."
