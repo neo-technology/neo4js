@@ -50,7 +50,7 @@ Example usage:
 Build production version
 ------------
 
-    git clone http://github.com/jakewins/neo4js.git
+    git clone http://github.com/neo4j/neo4js.git
     cd neo4js
     mvn package
 	
