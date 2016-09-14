@@ -1,3 +1,7 @@
+## NOTE: This is no longer maintained
+
+Please see https://github.com/neo4j/neo4j-javascript-driver for a modern Neo4j JS Driver
+
 Neo4j server client for JavaScript
 =================================
 
